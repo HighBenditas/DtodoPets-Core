@@ -7,8 +7,9 @@ queda disponible para capacidades que lo necesiten más adelante.
 
 ## Estado actual
 
-Foundation, Identity, Locations, Catalog e Inventory están implementados en el
-backend. El hito activo es Customers. Consulta
+Foundation, Identity, Locations, Catalog e Inventory están implementados; el
+dominio Customers está operativo y espera Orders para calcular historial/gasto.
+El hito activo sigue siendo Customers. Consulta
 [el estado del proyecto](docs/PROJECT_STATUS.md) y
 [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 

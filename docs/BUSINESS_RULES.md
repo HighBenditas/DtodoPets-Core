@@ -63,6 +63,18 @@ roadmap.
 - Locks de fila serializan operaciones concurrentes; las transferencias bloquean
   saldos en orden estable.
 
+### Clientes
+
+- Nombre es obligatorio; email, teléfono y RUT son opcionales.
+- Email se normaliza a minúsculas, teléfono chileno a E.164 y RUT sin puntos con
+  dígito verificador validado.
+- Email, teléfono y RUT, cuando existen, son únicos dentro de la organización.
+- Un cliente admite múltiples direcciones con etiqueta única.
+- La primera dirección activa es default y solo puede existir una default activa.
+- Cambiar/desactivar la default ocurre bajo lock; al desactivarla se promueve la
+  dirección activa más antigua.
+- Desactivar clientes/direcciones conserva sus datos para historial futuro.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

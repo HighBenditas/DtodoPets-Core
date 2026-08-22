@@ -36,6 +36,11 @@ estructura inspirada en Keep a Changelog.
   locks de fila, prevención de negativos e idempotencia por referencia.
 - Permisos `inventory.transfer`/`inventory.reserve`, 52 unit tests en 17 suites
   y smoke concurrente real contra PostgreSQL.
+- Migración `add_customers` con identidad multi-tenant, direcciones y default
+  activo único mediante índice parcial.
+- API paginada de clientes con normalización/validación chilena y gestión
+  transaccional de direcciones.
+- Cobertura ampliada a 65 unit tests en 19 suites y smoke HTTP real de Customers.
 
 ### Changed
 

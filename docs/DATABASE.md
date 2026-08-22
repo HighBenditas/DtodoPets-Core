@@ -2,8 +2,9 @@
 
 ## Estado real
 
-PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog e Inventory. Hay
-cinco migraciones aplicadas, incluida `20260822223000_add_inventory`.
+PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory y
+Customers. Hay seis migraciones aplicadas, incluida
+`20260822230000_add_customers`.
 
 ```mermaid
 erDiagram
@@ -18,6 +19,8 @@ erDiagram
   Organization ||--o{ InventoryBalance : owns
   Organization ||--o{ InventoryMovement : owns
   Organization ||--o{ InventoryReservation : owns
+  Organization ||--o{ Customer : owns
+  Organization ||--o{ CustomerAddress : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -30,6 +33,7 @@ erDiagram
   InventoryBalance ||--o{ InventoryReservation : reserves
   User ||--o{ InventoryMovement : acts
   User ||--o{ InventoryReservation : creates
+  Customer ||--o{ CustomerAddress : has
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -139,6 +143,24 @@ erDiagram
     string referenceType
     string referenceId
   }
+  Customer {
+    string id PK
+    string organizationId FK
+    string name
+    string email
+    string phone
+    string rut
+    boolean active
+  }
+  CustomerAddress {
+    string id PK
+    string organizationId FK
+    string customerId FK
+    string label
+    string addressLine1
+    boolean isDefault
+    boolean active
+  }
 ```
 
 ## Organization
@@ -210,11 +232,22 @@ Las mutaciones bloquean saldos con `SELECT ... FOR UPDATE`. Transferencias
 bloquean ambos IDs ordenados y crean movimientos `TRANSFER_OUT`/`TRANSFER_IN`
 con el mismo `operationId` dentro de una sola transacción.
 
+## Clientes
+
+`Customer` lleva `organizationId`; email, teléfono y RUT son opcionales pero,
+cuando existen, únicos por tenant. La API guarda correo en minúsculas, teléfono
+chileno E.164 (`+56...`) y RUT sin puntos con dígito verificador validado. Checks
+de PostgreSQL refuerzan los formatos normalizados.
+
+`CustomerAddress` conserva destinatario, contacto y dirección logística, con FK
+compuesta hacia el cliente/tenant. La etiqueta es única por cliente. Un índice
+parcial permite como máximo una dirección activa con `isDefault=true`; el
+servicio bloquea al cliente para cambiar el default sin carreras.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Clientes: identidad normalizada y múltiples direcciones por tenant.
 - Pedidos: items conservan snapshots comerciales y no dependen del precio actual.
 - Pagos y envíos: entidades separadas del pedido.
 - Integraciones: constraints de idempotencia por canal/proveedor y referencia.

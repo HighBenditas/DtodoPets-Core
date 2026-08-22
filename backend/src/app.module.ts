@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { CustomersModule } from './customers/customers.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { LocationsModule } from './locations/locations.module';
@@ -17,6 +18,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     PrismaModule,
     AuthModule,
     CatalogModule,
+    CustomersModule,
     HealthModule,
     InventoryModule,
     LocationsModule,

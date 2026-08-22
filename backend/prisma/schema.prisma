@@ -27,6 +27,8 @@ model Organization {
   inventoryBalances     InventoryBalance[]
   inventoryMovements    InventoryMovement[]
   inventoryReservations InventoryReservation[]
+  customers             Customer[]
+  customerAddresses     CustomerAddress[]
 }
 
 model Brand {
@@ -224,6 +226,56 @@ model InventoryReservation {
   @@unique([id, organizationId])
   @@index([organizationId, status, createdAt])
   @@index([balanceId, status])
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+  rut            String?
+  notes          String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  addresses    CustomerAddress[]
+
+  @@unique([organizationId, email])
+  @@unique([organizationId, phone])
+  @@unique([organizationId, rut])
+  @@unique([id, organizationId])
+  @@index([organizationId, active, name])
+}
+
+model CustomerAddress {
+  id             String   @id @default(uuid())
+  organizationId String
+  customerId     String
+  label          String
+  recipientName  String
+  phone          String?
+  addressLine1   String
+  addressLine2   String?
+  commune        String
+  city           String
+  region         String
+  postalCode     String?
+  instructions   String?
+  isDefault      Boolean  @default(false)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer     Customer     @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([customerId, label])
+  @@unique([id, organizationId])
+  @@index([organizationId, active])
+  @@index([customerId, active, isDefault])
 }
 
 model Location {

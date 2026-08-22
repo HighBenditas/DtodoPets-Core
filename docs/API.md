@@ -59,6 +59,14 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | POST | `/api/v1/inventory/transfers` | Bearer + `inventory.transfer` | Transfiere entre bodegas atómicamente |
 | POST | `/api/v1/inventory/reservations` | Bearer + `inventory.reserve` | Reserva disponibilidad |
 | POST | `/api/v1/inventory/reservations/:id/release` | Bearer + `inventory.reserve` | Libera una reserva idempotentemente |
+| GET | `/api/v1/customers` | Bearer + `customers.read` | Lista paginada y buscable del tenant |
+| GET | `/api/v1/customers/:id` | Bearer + `customers.read` | Obtiene cliente con direcciones |
+| POST | `/api/v1/customers` | Bearer + `customers.create` | Crea cliente normalizado |
+| PATCH | `/api/v1/customers/:id` | Bearer + `customers.update` | Actualiza identidad/estado |
+| GET | `/api/v1/customers/:id/addresses` | Bearer + `customers.read` | Lista direcciones del cliente |
+| POST | `/api/v1/customers/:id/addresses` | Bearer + `customers.update` | Agrega dirección |
+| PATCH | `/api/v1/customers/:id/addresses/:addressId` | Bearer + `customers.update` | Actualiza/desactiva dirección |
+| PUT | `/api/v1/customers/:id/addresses/:addressId/default` | Bearer + `customers.update` | Define dirección default |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -130,7 +138,18 @@ Ajustes usan `quantityDelta` distinto de cero. Transferencias y reservas usan
 y cantidad o liberar una reserva ya liberada devuelve `idempotent: true` sin un
 nuevo movimiento. Stock insuficiente responde 409.
 
+## Clientes
+
+La lista acepta `page`, `limit`, `active` y `search`; busca por nombre, correo,
+teléfono o RUT. La API normaliza email a minúsculas, teléfono chileno a E.164 y
+RUT al formato `12345678-5`, validando su dígito verificador. Duplicados dentro
+del tenant responden 409.
+
+La primera dirección activa siempre se vuelve default. Crear otra con
+`isDefault=true` o usar la ruta `/default` reemplaza la anterior atómicamente.
+Desactivar la default promueve la dirección activa más antigua.
+
 ## Planificados
 
-`/api/v1/customers`, `/orders`, `/payments`, `/shipments`, `/channels`,
+`/api/v1/orders`, `/payments`, `/shipments`, `/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.

@@ -59,10 +59,16 @@ FASE 6 — Orders.
   de filas ordenado, permisos separados e idempotencia por referencia.
 - 52 unit tests en 17 suites y 6 e2e correctos; smoke concurrente real aprobó
   10 reservas sobre 100 unidades y rechazó otras 2 con HTTP 409.
+- Clientes multi-tenant paginados con correo, teléfono chileno y RUT
+  normalizados/únicos, búsqueda y desactivación lógica.
+- Múltiples direcciones por cliente con un solo default activo, selección y
+  promoción transaccionales bajo lock del cliente.
+- 65 unit tests en 19 suites y 6 e2e correctos; smoke HTTP real aprobó
+  normalización, duplicado 409, RUT inválido 400 y ciclo de direcciones default.
 
 ## Funcionalidades pendientes
 
-- Clientes y pedidos.
+- Historial/gasto de clientes (depende de Orders) y pedidos.
 - Pagos, logística, canales, integraciones, promociones y devoluciones.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
@@ -96,11 +102,13 @@ FASE 6 — Orders.
 | `20260822220140_add_locations_warehouses` | Aplicada | Sucursales y bodegas multi-tenant |
 | `20260822221117_add_catalog` | Aplicada | Marcas, categorías, productos, variantes e imágenes |
 | `20260822223000_add_inventory` | Aplicada | Saldos, ledger, reservas, constraints y trigger append-only |
+| `20260822230000_add_customers` | Aplicada | Clientes, direcciones, unicidades e índice de default activo |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, veintitrés permisos, una
 sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
 imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
+También contiene un cliente ficticio con dos direcciones del smoke de Customers.
 
 ## Comandos útiles
 
@@ -125,6 +133,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar FASE 5 con clientes y múltiples direcciones, normalización chilena
-de correo/teléfono/RUT, unicidades por tenant, paginación y pruebas de fuga entre
-organizaciones.
+Implementar Orders y sus snapshots/totales para completar la proyección de
+historial y gasto de Customer. La creación/cancelación debe coordinar reservas
+de inventario atómicamente.

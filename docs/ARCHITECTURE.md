@@ -33,6 +33,8 @@ no componentes ya implementados.
   imágenes; la creación de producto y sus dependencias es transaccional.
 - `InventoryModule` mantiene saldos y reservas, y escribe un ledger inmutable.
   Usa locks de fila explícitos para serializar mutaciones concurrentes.
+- `CustomersModule` mantiene identidad normalizada y direcciones; serializa los
+  cambios de dirección default mediante lock del cliente.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos

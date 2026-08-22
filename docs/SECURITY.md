@@ -19,6 +19,8 @@
 - ValidationPipe whitelist, filtro de error seguro, Helmet, CORS configurable y
   correlation IDs.
 - Los `.env` están ignorados y existen ejemplos sin secretos.
+- Clientes, RUT, teléfonos y direcciones solo se exponen con permisos
+  `customers.*`, siempre filtrados por tenant; no deben incluirse en logs.
 
 ## Riesgos pendientes
 
@@ -27,6 +29,9 @@
 - La CLI Prisma incluye una dependencia transitiva `deepmerge-ts` reportada por
   npm con severidad alta. `npm audit fix --force` propone un downgrade mayor y
   no se aplicará. Se vigilará una versión Prisma corregida compatible.
+- Retención, exportación y eliminación/anonimización de datos personales deberá
+  definirse antes de producción; hoy se usa desactivación lógica para conservar
+  consistencia histórica.
 
 ## Reporte y revisión
 

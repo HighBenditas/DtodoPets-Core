@@ -43,9 +43,9 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 
 ## 🟡 FASE 5 — Customers
 
-- Clientes y múltiples direcciones.
-- Normalización de correo/teléfono/RUT y prevención de duplicados.
-- Historial calculable de pedidos y gasto.
+- ✅ Clientes y múltiples direcciones con default único activo.
+- ✅ Normalización de correo/teléfono/RUT y prevención de duplicados.
+- 🟡 Historial calculable de pedidos y gasto (requiere FASE 6).
 
 ## ⬜ FASE 6 — Orders
 
