@@ -9,6 +9,8 @@ import { InventoryModule } from './inventory/inventory.module';
 import { LocationsModule } from './locations/locations.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { OrdersModule } from './orders/orders.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ReturnsModule } from './returns/returns.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
@@ -25,6 +27,8 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     LocationsModule,
     OrganizationsModule,
     OrdersModule,
+    PaymentsModule,
+    ReturnsModule,
     RolesModule,
     UsersModule,
     WarehousesModule,

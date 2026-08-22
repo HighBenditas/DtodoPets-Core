@@ -53,13 +53,13 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Totales monetarios CLP, descuentos y costo de envío.
 - ✅ Creación, confirmación y cancelación atómicas con inventario.
 
-## 🟡 FASE 7 — Payments & Returns
+## ✅ FASE 7 — Payments & Returns
 
-- Pagos separados del pedido, múltiples pagos y reembolsos.
-- Devoluciones parciales y reintegro opcional de stock.
-- Idempotencia para proveedores de pago.
+- ✅ Pagos separados del pedido, múltiples pagos y reembolsos.
+- ✅ Devoluciones parciales y reintegro opcional de stock.
+- ✅ Idempotencia para proveedores de pago y devoluciones.
 
-## ⬜ FASE 8 — Logistics
+## 🟡 FASE 8 — Logistics
 
 - Shipments desacoplados, métodos, tracking y costos reales/subsidios.
 - Retiro, despacho propio, marketplace y courier externo.

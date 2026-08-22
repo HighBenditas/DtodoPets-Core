@@ -32,6 +32,10 @@ model Organization {
   orders                Order[]
   orderItems            OrderItem[]
   orderStatusHistory    OrderStatusHistory[]
+  payments              Payment[]
+  paymentRefunds        PaymentRefund[]
+  orderReturns          OrderReturn[]
+  orderReturnItems      OrderReturnItem[]
 }
 
 model Brand {
@@ -149,6 +153,7 @@ enum InventoryMovementType {
   RESERVATION
   RELEASE
   COMMIT
+  RETURN
 }
 
 enum InventoryReservationStatus {
@@ -352,6 +357,9 @@ model User {
   consumedInventoryReservations InventoryReservation[] @relation("InventoryReservationConsumer")
   createdOrders                 Order[]                @relation("OrderCreator")
   orderStatusChanges            OrderStatusHistory[]   @relation("OrderStatusActor")
+  createdPayments               Payment[]              @relation("PaymentCreator")
+  createdPaymentRefunds         PaymentRefund[]        @relation("PaymentRefundCreator")
+  createdOrderReturns           OrderReturn[]          @relation("OrderReturnCreator")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId])
@@ -462,6 +470,8 @@ model Order {
   createdBy       User                 @relation("OrderCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
   items           OrderItem[]
   statusHistory   OrderStatusHistory[]
+  payments        Payment[]
+  returns         OrderReturn[]
 
   @@unique([organizationId, number])
   @@unique([id, organizationId])
@@ -489,6 +499,7 @@ model OrderItem {
   order                Order                 @relation(fields: [orderId, organizationId], references: [id, organizationId], onDelete: Cascade)
   variant              ProductVariant        @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
   inventoryReservation InventoryReservation? @relation(fields: [inventoryReservationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  returnItems          OrderReturnItem[]
 
   @@unique([id, organizationId])
   @@unique([orderId, variantId])
@@ -512,4 +523,114 @@ model OrderStatusHistory {
 
   @@index([organizationId, createdAt])
   @@index([orderId, createdAt])
+}
+
+enum PaymentMethod {
+  CASH
+  DEBIT_CARD
+  CREDIT_CARD
+  BANK_TRANSFER
+  STORE_CREDIT
+  OTHER
+}
+
+enum PaymentStatus {
+  CAPTURED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  organizationId    String
+  orderId           String
+  method            PaymentMethod
+  status            PaymentStatus @default(CAPTURED)
+  currency          String        @default("CLP")
+  amount            Decimal       @db.Decimal(14, 0)
+  provider          String
+  externalReference String?
+  idempotencyKey    String
+  requestHash       String
+  notes             String?
+  createdByUserId   String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  order        Order           @relation(fields: [orderId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User            @relation("PaymentCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  refunds      PaymentRefund[]
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, provider, externalReference])
+  @@unique([id, organizationId])
+  @@index([organizationId, status, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model PaymentRefund {
+  id                String   @id @default(uuid())
+  organizationId    String
+  paymentId         String
+  currency          String   @default("CLP")
+  amount            Decimal  @db.Decimal(14, 0)
+  reason            String
+  externalReference String?
+  idempotencyKey    String
+  requestHash       String
+  createdByUserId   String
+  createdAt         DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  payment      Payment      @relation(fields: [paymentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User         @relation("PaymentRefundCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([organizationId, idempotencyKey])
+  @@unique([paymentId, externalReference])
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([paymentId, createdAt])
+}
+
+model OrderReturn {
+  id              String   @id @default(uuid())
+  organizationId  String
+  orderId         String
+  number          String
+  reason          String
+  idempotencyKey  String
+  requestHash     String
+  createdByUserId String
+  createdAt       DateTime @default(now())
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  order        Order             @relation(fields: [orderId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User              @relation("OrderReturnCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  items        OrderReturnItem[]
+
+  @@unique([organizationId, number])
+  @@unique([organizationId, idempotencyKey])
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model OrderReturnItem {
+  id             String   @id @default(uuid())
+  organizationId String
+  orderReturnId  String
+  orderItemId    String
+  quantity       Int
+  restocked      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  orderReturn  OrderReturn  @relation(fields: [orderReturnId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  orderItem    OrderItem    @relation(fields: [orderItemId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([orderReturnId, orderItemId])
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([orderItemId, createdAt])
 }

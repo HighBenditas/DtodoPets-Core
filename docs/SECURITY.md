@@ -23,6 +23,9 @@
   `customers.*`, siempre filtrados por tenant; no deben incluirse en logs.
 - Pedidos y snapshots personales requieren permisos `orders.*`, se filtran por
   tenant y tampoco deben incluirse íntegros en logs o mensajes de error.
+- Pagos/reembolsos/devoluciones requieren permisos `payments.*`/`returns.*`.
+  Claves idempotentes y referencias externas se conservan, pero la huella
+  SHA-256 interna nunca se expone; no se almacenan datos de tarjeta.
 
 ## Riesgos pendientes
 

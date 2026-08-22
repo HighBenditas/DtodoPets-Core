@@ -8,8 +8,9 @@ queda disponible para capacidades que lo necesiten más adelante.
 ## Estado actual
 
 Foundation, Identity, Locations, Catalog, Inventory, Customers y Orders están
-implementados. El detalle de cliente ya proyecta historial y gasto desde pedidos
-confirmados/completados. El hito activo es Payments & Returns. Consulta
+implementados, junto con pagos, reembolsos y devoluciones parciales. El detalle
+de cliente proyecta historial y gasto desde pedidos confirmados/completados. El
+hito activo es Logistics. Consulta
 [el estado del proyecto](docs/PROJECT_STATUS.md) y
 [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 

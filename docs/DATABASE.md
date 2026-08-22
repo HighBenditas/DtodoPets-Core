@@ -3,8 +3,9 @@
 ## Estado real
 
 PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
-Customers y Orders. Hay ocho migraciones aplicadas; las últimas son
-`20260822233000_extend_inventory_for_orders` y `20260822233100_add_orders`.
+Customers, Orders, Payments y Returns. Hay diez migraciones aplicadas; las
+últimas son `20260822234000_extend_inventory_for_returns` y
+`20260822234100_add_payments_returns`.
 
 ```mermaid
 erDiagram
@@ -24,6 +25,10 @@ erDiagram
   Organization ||--o{ Order : owns
   Organization ||--o{ OrderItem : owns
   Organization ||--o{ OrderStatusHistory : owns
+  Organization ||--o{ Payment : owns
+  Organization ||--o{ PaymentRefund : owns
+  Organization ||--o{ OrderReturn : owns
+  Organization ||--o{ OrderReturnItem : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -43,6 +48,11 @@ erDiagram
   Warehouse ||--o{ Order : fulfills
   Order ||--|{ OrderItem : contains
   Order ||--o{ OrderStatusHistory : records
+  Order ||--o{ Payment : receives
+  Payment ||--o{ PaymentRefund : refunds
+  Order ||--o{ OrderReturn : returns
+  OrderReturn ||--|{ OrderReturnItem : contains
+  OrderItem ||--o{ OrderReturnItem : returned_as
   ProductVariant ||--o{ OrderItem : snapshots
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
@@ -200,6 +210,43 @@ erDiagram
     string reason
     string actorUserId FK
   }
+  Payment {
+    string id PK
+    string organizationId FK
+    string orderId FK
+    enum method
+    enum status
+    decimal amount
+    string provider
+    string idempotencyKey
+    string requestHash
+  }
+  PaymentRefund {
+    string id PK
+    string organizationId FK
+    string paymentId FK
+    decimal amount
+    string reason
+    string idempotencyKey
+    string requestHash
+  }
+  OrderReturn {
+    string id PK
+    string organizationId FK
+    string orderId FK
+    string number
+    string reason
+    string idempotencyKey
+    string requestHash
+  }
+  OrderReturnItem {
+    string id PK
+    string organizationId FK
+    string orderReturnId FK
+    string orderItemId FK
+    int quantity
+    boolean restocked
+  }
 ```
 
 ## Organization
@@ -260,7 +307,8 @@ actores o reservas de tenants distintos.
 `InventoryMovement` conserva tipo, deltas, cantidades antes/después, actor,
 motivo, operación y referencia opcional. Checks verifican la aritmética y que
 cada tipo use deltas válidos. Un trigger rechaza cualquier UPDATE o DELETE: el
-ledger solo admite inserts.
+ledger solo admite inserts. `RETURN` aumenta únicamente físico y deja reservado
+intacto cuando una devolución decide reintegrar mercadería.
 
 `InventoryReservation` identifica cada reserva, su cantidad, referencia externa
 opcional, creador y cierre. Una referencia es única por saldo y tenant. Los
@@ -301,11 +349,35 @@ ser exactamente precio por cantidad. La reserva de inventario asociada queda
 de actualización. Creación, cambio de estado, reservas y movimientos ocurren en
 la misma transacción.
 
+## Pagos y reembolsos
+
+`Payment` referencia un pedido del mismo tenant y conserva método, estado,
+importe `Decimal(14,0)`, proveedor, referencia externa, actor y timestamps. Moneda
+queda restringida a CLP e importe debe ser positivo. La combinación
+organización/proveedor/referencia externa evita duplicar una captura conocida.
+
+Cada pago tiene una clave idempotente única por organización y una huella
+SHA-256 canónica del request. `PaymentRefund` aplica el mismo patrón, es
+append-only desde la API y conserva importe, motivo y actor. El servicio bloquea
+primero pedido y pago para limitar el reembolso acumulado y derivar
+`CAPTURED`/`PARTIALLY_REFUNDED`/`REFUNDED` sin carreras.
+
+## Devoluciones
+
+`OrderReturn` registra número, pedido, motivo, actor y contrato idempotente.
+`OrderReturnItem` enlaza el item comprado, cantidad y decisión de reintegro. La
+cantidad es positiva; el servicio bloquea el pedido y suma devoluciones previas
+para impedir exceder lo comprado.
+
+Cuando `restocked=true`, se bloquea el `InventoryBalance` original asociado a la
+reserva consumida, se aumenta físico y se inserta un movimiento `RETURN` en la
+misma transacción. La devolución comercial y el reembolso permanecen separados.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Pagos y envíos: entidades separadas del pedido.
+- Envíos: entidades separadas del pedido y de su costo cobrado al cliente.
 - Integraciones: constraints de idempotencia por canal/proveedor y referencia.
 
 Las secciones previstas no representan tablas implementadas todavía. Cada hito

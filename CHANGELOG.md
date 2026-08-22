@@ -48,6 +48,12 @@ estructura inspirada en Keep a Changelog.
 - Proyección de conteos y gasto confirmado/completado en el detalle de cliente.
 - Cobertura ampliada a 72 unit tests en 20 suites, manteniendo 6 e2e, y smoke
   HTTP real del ciclo completo de Orders contra PostgreSQL.
+- Migraciones `extend_inventory_for_returns` y `add_payments_returns` con pagos,
+  reembolsos, devoluciones parciales y movimiento de inventario `RETURN`.
+- APIs multi-tenant de Payments y Returns con importes CLP exactos, múltiples
+  pagos, saldo neto, reintegro opcional y huella SHA-256 de idempotencia.
+- Cobertura ampliada a 81 unit tests en 22 suites y smoke HTTP real de cobro,
+  reembolso parcial/completo y devolución con/sin reintegro de stock.
 
 ### Changed
 
@@ -58,6 +64,7 @@ estructura inspirada en Keep a Changelog.
 ### Fixed
 
 - Protección Git para archivos `.env` de la raíz y cliente Prisma generado.
+- Script `start:prod` corregido para la salida real `dist/src/main` de Nest.
 
 ### Security
 

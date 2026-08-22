@@ -37,6 +37,10 @@ no componentes ya implementados.
   cambios de dirección default mediante lock del cliente.
 - `OrdersModule` preserva snapshots/totales y coordina pedido, reservas, ledger
   e historial de estados dentro de transacciones con locks de fila.
+- `PaymentsModule` registra cobros/reembolsos exactos e idempotentes; serializa
+  el saldo neto mediante lock del pedido.
+- `ReturnsModule` limita devoluciones parciales por item y reintegra stock de
+  forma opcional mediante el ledger de inventario.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos

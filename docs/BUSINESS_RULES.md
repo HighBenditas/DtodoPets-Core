@@ -92,6 +92,29 @@ roadmap.
   cancelación ya aplicada es idempotente; otra transición terminal responde 409.
 - El gasto del cliente suma únicamente pedidos `CONFIRMED` o `COMPLETED`.
 
+### Pagos y reembolsos
+
+- Solo pedidos `CONFIRMED`/`COMPLETED` aceptan cobros capturados.
+- Un pedido admite múltiples pagos, pero su suma menos reembolsos no supera el
+  total del pedido; el cálculo ocurre bajo lock del pedido.
+- Cada pago conserva método, proveedor, referencia externa opcional, importe CLP
+  exacto, actor y fechas. La referencia del proveedor es única por tenant.
+- Reembolsos son append-only y nunca superan el importe original del pago.
+- El estado del pago se deriva del total reembolsado: capturado, parcial o total.
+- Pago y reembolso exigen clave idempotente; el mismo payload se reproduce y un
+  payload distinto con la misma clave responde conflicto.
+
+### Devoluciones
+
+- Solo pedidos `CONFIRMED`/`COMPLETED` admiten devoluciones.
+- Un item puede devolverse parcialmente en varias operaciones, pero la suma no
+  supera la cantidad comprada; el pedido se bloquea para evitar carreras.
+- Cada línea decide si vuelve a stock. Si vuelve, utiliza el saldo de origen y
+  crea un movimiento `RETURN`; si no, inventario permanece intacto.
+- Devolver mercadería no reembolsa dinero implícitamente: ambos actos son
+  trazables y deliberadamente separados.
+- Una devolución completa es idempotente por clave y huella de su payload.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

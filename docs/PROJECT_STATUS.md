@@ -5,21 +5,21 @@ Actualizado: 2026-08-22.
 ## Estado actual
 
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
-Identity & Access, sucursales/bodegas, catálogo, inventario, clientes y pedidos
-multi-tenant. PostgreSQL y Redis funcionan en Docker. El siguiente dominio
-incompleto es Payments & Returns; aún no existe frontend.
+Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
+pagos y devoluciones multi-tenant. PostgreSQL y Redis funcionan en Docker. El
+siguiente dominio incompleto es Logistics; aún no existe frontend.
 
 ## Último hito completado
 
-FASE 6 — Orders.
+FASE 7 — Payments & Returns.
 
 ## Hito actual
 
-FASE 7 — Payments & Returns.
+FASE 8 — Logistics.
 
 ## Próximo hito
 
-FASE 8 — Logistics.
+FASE 9 — Sales Channels & Integrations.
 
 ## Funcionalidades terminadas
 
@@ -74,11 +74,21 @@ FASE 8 — Logistics.
 - El detalle de cliente proyecta conteos por estado y gasto confirmado/completado.
 - 72 unit tests en 20 suites y 6 e2e correctos; smoke HTTP real aprobó creación,
   confirmación, cancelación, replays idempotentes y stock insuficiente 409.
+- Pagos capturados separados del pedido, múltiples por venta y limitados al
+  saldo neto pendiente bajo lock del pedido.
+- Reembolsos parciales/completos limitados al pago original; estados
+  `CAPTURED`, `PARTIALLY_REFUNDED` y `REFUNDED` actualizados atómicamente.
+- Idempotencia con clave única y huella SHA-256 canónica: el mismo payload se
+  reproduce y una reutilización distinta responde 409.
+- Devoluciones parciales acumulables por item, con reintegro de stock opcional y
+  movimiento `RETURN` append-only cuando corresponde.
+- 81 unit tests en 22 suites y 6 e2e correctos; smoke HTTP real aprobó dos pagos,
+  sobrecobro 409, reembolsos, replays y devoluciones con/sin reintegro.
 
 ## Funcionalidades pendientes
 
-- Pagos, reembolsos y devoluciones parciales.
-- Logística, canales, integraciones y promociones.
+- Logística, shipments, retiro y tracking.
+- Canales, integraciones y promociones.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
 ## Problemas conocidos
@@ -103,6 +113,8 @@ FASE 8 — Logistics.
   filas con `FOR UPDATE` y las transferencias adquieren locks en orden estable.
 - Pedidos preservan snapshots de cliente, dirección, SKU, nombre y precio; sus
   transiciones de inventario e historial son parte de la misma transacción.
+- Pagos, reembolsos y devoluciones son entidades separadas; serializan por
+  pedido y usan claves idempotentes con una huella del payload normalizado.
 
 ## Migraciones actuales
 
@@ -116,13 +128,16 @@ FASE 8 — Logistics.
 | `20260822230000_add_customers` | Aplicada | Clientes, direcciones, unicidades e índice de default activo |
 | `20260822233000_extend_inventory_for_orders` | Aplicada | Estados `CONSUMED` y movimiento `COMMIT` para confirmar pedidos |
 | `20260822233100_add_orders` | Aplicada | Pedidos, items, snapshots, totales e historial de estados |
+| `20260822234000_extend_inventory_for_returns` | Aplicada | Movimiento `RETURN` para reintegros trazables |
+| `20260822234100_add_payments_returns` | Aplicada | Pagos, reembolsos, devoluciones, idempotencia y constraints CLP |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
-tests: una organización, dos usuarios, seis roles, veintitrés permisos, una
+tests: una organización, dos usuarios, seis roles, veintiocho permisos, una
 sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
 imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
 También contiene un cliente ficticio con dos direcciones y dos pedidos del
-smoke de Orders: uno confirmado y otro cancelado.
+smoke de Orders: uno confirmado y otro cancelado. El confirmado tiene dos pagos,
+dos reembolsos y dos devoluciones ficticias; solo una reintegró stock.
 
 ## Comandos útiles
 
@@ -147,6 +162,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Payments & Returns como entidades separadas del pedido: múltiples
-pagos, reembolsos y devoluciones parciales, con importes CLP exactos,
-idempotencia de proveedor y reintegro opcional de inventario.
+Implementar Logistics con shipments separados del pedido, retiro y despacho,
+métodos/costos, tracking e historial de estados. Debe admitir múltiples envíos
+por pedido sin mezclar costo cobrado al cliente con costo logístico real.

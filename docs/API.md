@@ -72,6 +72,13 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | POST | `/api/v1/orders` | Bearer + `orders.create` | Crea pedido y reserva stock atómicamente |
 | POST | `/api/v1/orders/:id/confirm` | Bearer + `orders.update` | Confirma y consume inventario |
 | POST | `/api/v1/orders/:id/cancel` | Bearer + `orders.update` | Cancela y libera reservas |
+| GET | `/api/v1/payments` | Bearer + `payments.read` | Lista pagos con reembolsos y saldo neto |
+| GET | `/api/v1/payments/:id` | Bearer + `payments.read` | Obtiene un pago del tenant |
+| POST | `/api/v1/payments` | Bearer + `payments.create` | Registra un cobro capturado idempotente |
+| POST | `/api/v1/payments/:id/refunds` | Bearer + `payments.refund` | Registra reembolso parcial/completo |
+| GET | `/api/v1/returns` | Bearer + `returns.read` | Lista devoluciones parciales |
+| GET | `/api/v1/returns/:id` | Bearer + `returns.read` | Obtiene items de una devolución |
+| POST | `/api/v1/returns` | Bearer + `returns.create` | Devuelve items y reintegra stock opcionalmente |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -174,7 +181,34 @@ reservado y marca cada reserva `CONSUMED`; cancelar libera las reservas. Repetir
 la misma transición terminal devuelve `idempotent: true` sin nuevos efectos.
 Una transición incompatible responde 409, al igual que stock insuficiente.
 
+## Pagos y reembolsos
+
+La lista acepta `page`, `limit`, `orderId`, `status`, `method` y `search` por
+proveedor, referencia externa o número de pedido. Cada pago devuelve
+`refundedAmount` y `netAmount`; la huella interna del request nunca se expone.
+
+Crear un pago exige pedido confirmado/completado, `amount` CLP positivo,
+`method`, `provider` e `idempotencyKey`; acepta referencia externa y notas. La
+suma neta de pagos no puede superar el total del pedido. Métodos disponibles:
+`CASH`, `DEBIT_CARD`, `CREDIT_CARD`, `BANK_TRANSFER`, `STORE_CREDIT` y `OTHER`.
+
+Reembolsar exige importe positivo, motivo e `idempotencyKey`; nunca puede
+superar lo aún reembolsable del pago. Una clave repetida con el mismo payload
+devuelve `idempotent: true`; con datos diferentes devuelve 409. Los estados son
+`CAPTURED`, `PARTIALLY_REFUNDED` y `REFUNDED`.
+
+## Devoluciones
+
+La lista acepta `page`, `limit`, `orderId` y `search` por número de devolución,
+pedido o cliente. Crear exige pedido confirmado/completado, motivo, clave
+idempotente e items únicos con `orderItemId`, cantidad y `restock` opcional.
+
+La suma de devoluciones de un item nunca supera lo comprado. `restock=true`
+reintegra físico al saldo de origen y crea un movimiento `RETURN`; `false`
+conserva la trazabilidad sin alterar inventario. El reembolso monetario sigue
+siendo una operación explícita y separada.
+
 ## Planificados
 
-`/api/v1/payments`, `/returns`, `/shipments`, `/channels`,
+`/api/v1/shipments`, `/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.
