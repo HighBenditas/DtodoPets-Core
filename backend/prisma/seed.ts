@@ -108,11 +108,112 @@ async function main() {
       update: { locationId: location.id },
     });
 
-    return { email: user.email, organizationSlug: organization.slug };
+    const brand = await transaction.brand.upsert({
+      where: {
+        organizationId_slug: {
+          organizationId: organization.id,
+          slug: 'dtodopets-seleccion',
+        },
+      },
+      create: {
+        name: 'DTodoPets Selección',
+        organizationId: organization.id,
+        slug: 'dtodopets-seleccion',
+      },
+      update: { active: true, name: 'DTodoPets Selección' },
+    });
+
+    const category = await transaction.category.upsert({
+      where: {
+        organizationId_slug: {
+          organizationId: organization.id,
+          slug: 'alimento-para-perros',
+        },
+      },
+      create: {
+        name: 'Alimento para perros',
+        organizationId: organization.id,
+        slug: 'alimento-para-perros',
+      },
+      update: { active: true, name: 'Alimento para perros' },
+    });
+
+    const product = await transaction.product.upsert({
+      where: {
+        organizationId_slug: {
+          organizationId: organization.id,
+          slug: 'alimento-adulto-pollo-arroz',
+        },
+      },
+      create: {
+        brandId: brand.id,
+        categoryId: category.id,
+        description: 'Producto de demostración para desarrollo local.',
+        lifeStage: 'Adulto',
+        name: 'Alimento Adulto Pollo y Arroz',
+        organizationId: organization.id,
+        slug: 'alimento-adulto-pollo-arroz',
+        species: 'Perro',
+      },
+      update: {
+        active: true,
+        brandId: brand.id,
+        categoryId: category.id,
+      },
+    });
+
+    await transaction.productVariant.upsert({
+      where: {
+        organizationId_sku: {
+          organizationId: organization.id,
+          sku: 'DTP-ADULTO-3KG',
+        },
+      },
+      create: {
+        costAmount: 9_500,
+        format: 'Bolsa',
+        name: 'Bolsa 3 kg',
+        organizationId: organization.id,
+        priceAmount: 14_990,
+        productId: product.id,
+        sku: 'DTP-ADULTO-3KG',
+        weightGrams: 3_000,
+      },
+      update: {
+        active: true,
+        costAmount: 9_500,
+        priceAmount: 14_990,
+        productId: product.id,
+      },
+    });
+
+    await transaction.productImage.upsert({
+      where: {
+        productId_url: {
+          productId: product.id,
+          url: 'https://assets.dtodopets.local/products/alimento-adulto-3kg.webp',
+        },
+      },
+      create: {
+        altText: 'Bolsa de alimento adulto para perros de 3 kg',
+        productId: product.id,
+        url: 'https://assets.dtodopets.local/products/alimento-adulto-3kg.webp',
+      },
+      update: {
+        altText: 'Bolsa de alimento adulto para perros de 3 kg',
+        sortOrder: 0,
+      },
+    });
+
+    return {
+      email: user.email,
+      organizationSlug: organization.slug,
+      productSku: 'DTP-ADULTO-3KG',
+    };
   });
 
   console.log(
-    `Development seed ready for ${result.email} in ${result.organizationSlug}`,
+    `Development seed ready for ${result.email} in ${result.organizationSlug} with ${result.productSku}`,
   );
 }
 

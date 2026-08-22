@@ -2,12 +2,17 @@
 
 ## Estado actual
 
-- 34 unit tests en 12 suites para configuración, health, Organization, password,
-  login/sesiones, permisos, usuarios, roles, sucursales y bodegas.
+- 46 unit tests en 16 suites para configuración, health, Organization, password,
+  login/sesiones, permisos, usuarios, roles, sucursales, bodegas y catálogo.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
 - Smoke HTTP real de sucursales/bodegas, paginación y validación aprobado.
+- Smoke HTTP real autenticado de marcas/categorías/productos aprobado: búsqueda
+  por SKU, precio CLP serializado exactamente, 401 sin token y 400 para
+  paginación inválida.
+- Seed de catálogo ejecutado dos veces; PostgreSQL conservó un único registro de
+  marca, categoría, producto, variante e imagen.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia

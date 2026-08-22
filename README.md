@@ -7,9 +7,9 @@ queda disponible para capacidades que lo necesiten más adelante.
 
 ## Estado actual
 
-La foundation de backend y el dominio inicial `Organization` están en proceso de
-estabilización. Consulta [el estado del proyecto](docs/PROJECT_STATUS.md) y
-[el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
+Foundation, Identity, Locations y Catalog están implementados en el backend. El
+hito activo es Inventory. Consulta [el estado del proyecto](docs/PROJECT_STATUS.md)
+y [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 
 ## Stack
 
@@ -78,8 +78,9 @@ npm run prisma:seed
 ```
 
 El seed es idempotente y crea la organización, permisos, seis roles de sistema,
-el Owner local, una sucursal y una bodega ficticias. Los valores predeterminados son
-`admin@dtodopets.local` / `Change-this-development-password-123!`; son
+el Owner local, una sucursal, una bodega y un producto de catálogo ficticios.
+Los valores predeterminados son `admin@dtodopets.local` /
+`Change-this-development-password-123!`; son
 credenciales exclusivamente locales y deben sobrescribirse mediante las
 variables `SEED_*` descritas en `backend/.env.example`.
 

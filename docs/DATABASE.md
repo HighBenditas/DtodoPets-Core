@@ -2,8 +2,8 @@
 
 ## Estado real
 
-PostgreSQL 18 contiene las tablas de Organization e Identity. Están aplicadas
-`20260817231441_init_organization` y `20260822213602_add_identity_access`.
+PostgreSQL 18 contiene Foundation, Identity, Locations y Catalog. Hay cuatro
+migraciones aplicadas, incluida `20260822221117_add_catalog`.
 
 ```mermaid
 erDiagram
@@ -11,7 +11,16 @@ erDiagram
   Organization ||--o{ Role : defines
   Organization ||--o{ Location : owns
   Organization ||--o{ Warehouse : owns
+  Organization ||--o{ Brand : owns
+  Organization ||--o{ Category : owns
+  Organization ||--o{ Product : owns
+  Organization ||--o{ ProductVariant : owns
   Location ||--o{ Warehouse : contains
+  Brand ||--o{ Product : labels
+  Category ||--o{ Category : parent
+  Category ||--o{ Product : classifies
+  Product ||--|{ ProductVariant : offers
+  Product ||--o{ ProductImage : displays
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -62,6 +71,38 @@ erDiagram
     string name
     boolean active
   }
+  Brand {
+    string id PK
+    string organizationId FK
+    string slug
+    boolean active
+  }
+  Category {
+    string id PK
+    string organizationId FK
+    string parentId FK
+    string slug
+  }
+  Product {
+    string id PK
+    string organizationId FK
+    string brandId FK
+    string categoryId FK
+    string slug
+  }
+  ProductVariant {
+    string id PK
+    string organizationId FK
+    string productId FK
+    string sku
+    decimal priceAmount
+  }
+  ProductImage {
+    string id PK
+    string productId FK
+    string url
+    int sortOrder
+  }
 ```
 
 ## Organization
@@ -95,10 +136,26 @@ organizationId)` a `Location(id, organizationId)` impide asociar físicamente un
 bodega a una sucursal de otro tenant. `locationId` puede ser nulo para bodegas
 sin sucursal.
 
+## Catálogo
+
+`Brand`, `Category`, `Product` y `ProductVariant` llevan `organizationId` e
+índices compuestos. Las relaciones de producto con marca/categoría y de variante
+con producto usan foreign keys compuestas con la organización, por lo que una
+referencia entre tenants queda rechazada también en PostgreSQL. Las categorías
+admiten jerarquía dentro del tenant; el servicio impide ciclos.
+
+Los slugs de marca, categoría y producto, además de SKU/código de barras, son
+únicos por organización. Una imagen es única por producto y URL. El borrado de
+producto expuesto por la API es desactivación lógica.
+
+Costos y precios se guardan como `Decimal(14,0)`: pesos CLP enteros, nunca
+`Float`. Checks de base exigen importes no negativos, oferta no superior al
+precio, peso positivo y orden de imagen no negativo.
+
 ## Estrategia prevista
 
-- Dinero CLP: `Decimal` con precisión explícita o entero en pesos, definido por
-  dominio; nunca `Float`.
+- Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
+  al catálogo para pesos CLP exactos; nunca `Float`.
 - Inventario: saldo por bodega/variante más ledger de movimientos auditable.
 - Pedidos: items conservan snapshots comerciales y no dependen del precio actual.
 - Pagos y envíos: entidades separadas del pedido.

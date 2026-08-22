@@ -32,6 +32,20 @@ roadmap.
   garantiza con una foreign key compuesta.
 - Desactivar conserva historial y relaciones; no se expone borrado físico.
 
+### Catálogo
+
+- Slugs se normalizan y son únicos dentro de la organización.
+- Una categoría padre, marca o categoría asociada debe estar activa y pertenecer
+  al mismo tenant; las jerarquías de categoría no pueden contener ciclos.
+- Cada producto se crea con al menos una variante y toda la operación es atómica.
+- SKU se normaliza a mayúsculas y es único por organización; código de barras
+  también es único por organización cuando existe.
+- Costos y precios son enteros CLP no negativos. El precio de oferta, si existe,
+  no puede superar el precio normal.
+- Peso debe ser positivo, URLs de imágenes no se repiten dentro del producto y
+  reemplazar imágenes es atómico.
+- El endpoint DELETE de producto desactiva; no elimina físicamente.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

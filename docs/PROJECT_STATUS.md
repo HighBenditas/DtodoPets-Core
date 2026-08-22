@@ -4,21 +4,22 @@ Actualizado: 2026-08-22.
 
 ## Estado actual
 
-DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP e
-Identity & Access multi-tenant. PostgreSQL y Redis funcionan en Docker. El
-siguiente dominio incompleto es Locations & Catalog; aún no existe frontend.
+DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
+Identity & Access, sucursales/bodegas y catálogo multi-tenant. PostgreSQL y
+Redis funcionan en Docker. El siguiente dominio incompleto es Inventory; aún no
+existe frontend.
 
 ## Último hito completado
 
-FASE 2 — Identity & Organizations.
+FASE 3 — Locations & Catalog.
 
 ## Hito actual
 
-FASE 3 — Locations & Catalog.
+FASE 4 — Inventory.
 
 ## Próximo hito
 
-FASE 4 — Inventory.
+FASE 5 — Customers.
 
 ## Funcionalidades terminadas
 
@@ -43,10 +44,17 @@ FASE 4 — Inventory.
 - Sucursales y bodegas multi-tenant con relación compuesta protegida por FK,
   búsqueda, filtro de estado y paginación.
 - Seed/smoke HTTP de sucursal y bodega aprobado; 34 unit tests y 6 e2e.
+- Marcas, categorías jerárquicas, productos, variantes e imágenes multi-tenant.
+- SKU y código de barras únicos por organización, precios CLP exactos y
+  constraints PostgreSQL para importes, ofertas, peso y orden de imágenes.
+- Catálogo paginado con búsqueda/filtros, creación atómica y desactivación
+  lógica; seed idempotente con producto demostrativo.
+- 46 unit tests en 16 suites y 6 e2e correctos; smoke HTTP autenticado del
+  catálogo aprobado contra PostgreSQL.
 
 ## Funcionalidades pendientes
 
-- Sucursales/bodegas, catálogo, inventario, clientes y pedidos.
+- Inventario, clientes y pedidos.
 - Pagos, logística, canales, integraciones, promociones y devoluciones.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
@@ -76,10 +84,12 @@ FASE 4 — Inventory.
 | `20260817231441_init_organization` | Aplicada | Tabla e índice único de `Organization` |
 | `20260822213602_add_identity_access` | Aplicada | Usuarios, sesiones, roles y permisos |
 | `20260822220140_add_locations_warehouses` | Aplicada | Sucursales y bodegas multi-tenant |
+| `20260822221117_add_catalog` | Aplicada | Marcas, categorías, productos, variantes e imágenes |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, veintiún permisos, una
-sucursal y una bodega.
+sucursal, una bodega, una marca, una categoría, un producto, una variante y una
+imagen.
 
 ## Comandos útiles
 
@@ -104,5 +114,6 @@ documentos.
 
 ## NEXT ACTION
 
-Completar FASE 3 con `Brand`, `Category`, `Product` y `ProductVariant`, usando
-constraints multi-tenant, dinero CLP exacto, paginación, filtros y tests.
+Implementar FASE 4 con saldo por bodega/variante y ledger inmutable. Diseñar
+ajustes, transferencias, reservas y liberaciones transaccionales, con prevención
+de stock negativo y tests de invariantes/concurrencia.

@@ -24,6 +24,12 @@ estructura inspirada en Keep a Changelog.
 - Migración `add_locations_warehouses` con FK compuesta anti-fuga de tenant.
 - API paginada de sucursales y bodegas, nuevos permisos y seed ficticio.
 - Cobertura ampliada a 34 unit tests manteniendo 6 e2e.
+- Migración `add_catalog` con marcas, categorías jerárquicas, productos,
+  variantes, imágenes y constraints multi-tenant/monetarios.
+- API paginada y protegida de catálogo, búsqueda por SKU/código de barras,
+  filtros, creación atómica, variantes e imágenes.
+- Seed idempotente de catálogo ficticio y cobertura ampliada a 46 unit tests en
+  16 suites, manteniendo 6 e2e.
 
 ### Changed
 

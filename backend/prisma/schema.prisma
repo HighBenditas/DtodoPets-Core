@@ -20,6 +20,116 @@ model Organization {
   users      User[]
   locations  Location[]
   warehouses Warehouse[]
+  brands     Brand[]
+  categories Category[]
+  products   Product[]
+  variants   ProductVariant[]
+}
+
+model Brand {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  slug           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  products     Product[]
+
+  @@unique([organizationId, slug])
+  @@unique([id, organizationId])
+  @@index([organizationId, active])
+}
+
+model Category {
+  id             String   @id @default(uuid())
+  organizationId String
+  parentId       String?
+  name           String
+  slug           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent       Category?    @relation("CategoryTree", fields: [parentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  children     Category[]   @relation("CategoryTree")
+  products     Product[]
+
+  @@unique([organizationId, slug])
+  @@unique([id, organizationId])
+  @@index([organizationId, active])
+  @@index([parentId])
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  organizationId String
+  brandId        String?
+  categoryId     String?
+  name           String
+  slug           String
+  description    String?
+  species        String?
+  lifeStage      String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  brand        Brand?           @relation(fields: [brandId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  category     Category?        @relation(fields: [categoryId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  images       ProductImage[]
+  variants     ProductVariant[]
+
+  @@unique([organizationId, slug])
+  @@unique([id, organizationId])
+  @@index([organizationId, active])
+  @@index([brandId])
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id              String   @id @default(uuid())
+  organizationId  String
+  productId       String
+  sku             String
+  name            String?
+  format          String?
+  weightGrams     Int?
+  barcode         String?
+  costAmount      Decimal  @db.Decimal(14, 0)
+  priceAmount     Decimal  @db.Decimal(14, 0)
+  salePriceAmount Decimal? @db.Decimal(14, 0)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product      Product      @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([organizationId, sku])
+  @@unique([organizationId, barcode])
+  @@unique([id, organizationId])
+  @@index([organizationId, active])
+  @@index([productId])
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, url])
+  @@index([productId, sortOrder])
 }
 
 model Location {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CatalogModule } from './catalog/catalog.module';
 import { HealthModule } from './health/health.module';
 import { LocationsModule } from './locations/locations.module';
 import { OrganizationsModule } from './organizations/organizations.module';
@@ -14,6 +15,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
   imports: [
     PrismaModule,
     AuthModule,
+    CatalogModule,
     HealthModule,
     LocationsModule,
     OrganizationsModule,

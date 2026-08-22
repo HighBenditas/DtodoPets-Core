@@ -23,11 +23,14 @@ no componentes ya implementados.
 
 ## Estado implementado
 
-- `AppModule` compone `PrismaModule` y `OrganizationsModule`.
+- `AppModule` compone los módulos de infraestructura y dominio.
 - `PrismaModule` es global y expone un cliente Prisma con adapter PostgreSQL.
 - `OrganizationsModule` implementa CRUD básico contra `Organization`.
 - `AuthModule` aplica guards globales JWT/RBAC y gestiona sesiones rotativas.
 - `UsersModule` y `RolesModule` administran identidades y RBAC del tenant.
+- `LocationsModule` y `WarehousesModule` modelan la estructura física.
+- `CatalogModule` agrupa marcas, categorías jerárquicas, productos, variantes e
+  imágenes; la creación de producto y sus dependencias es transaccional.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos

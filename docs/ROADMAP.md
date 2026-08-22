@@ -27,14 +27,14 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Seed local seguro para organización, roles y administrador ficticio.
 - Tests de autenticación, autorización y fuga entre tenants.
 
-## 🟡 FASE 3 — Locations & Catalog
+## ✅ FASE 3 — Locations & Catalog
 
 - ✅ Sucursales y bodegas multi-tenant, paginadas y sembradas para desarrollo.
-- Marcas, categorías, productos y variantes.
-- SKU/código de barras únicos por organización y precios CLP seguros.
-- Paginación, filtros y búsqueda.
+- ✅ Marcas, categorías, productos, variantes e imágenes.
+- ✅ SKU/código de barras únicos por organización y precios CLP seguros.
+- ✅ Paginación, filtros y búsqueda.
 
-## ⬜ FASE 4 — Inventory
+## 🟡 FASE 4 — Inventory
 
 - Saldos físico, reservado y disponible por bodega/variante.
 - Ledger inmutable de movimientos.

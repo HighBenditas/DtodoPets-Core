@@ -35,6 +35,22 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | GET | `/api/v1/warehouses/:id` | Bearer + `warehouses.read` | Obtiene bodega del tenant |
 | POST | `/api/v1/warehouses` | Bearer + `warehouses.manage` | Crea bodega |
 | PATCH | `/api/v1/warehouses/:id` | Bearer + `warehouses.read/manage` | Actualiza bodega/estado |
+| GET | `/api/v1/brands` | Bearer + `products.read` | Lista paginada de marcas |
+| GET | `/api/v1/brands/:id` | Bearer + `products.read` | Obtiene marca del tenant |
+| POST | `/api/v1/brands` | Bearer + `products.create` | Crea marca |
+| PATCH | `/api/v1/brands/:id` | Bearer + `products.read/update` | Actualiza marca/estado |
+| GET | `/api/v1/categories` | Bearer + `products.read` | Lista categorías con padre y conteos |
+| GET | `/api/v1/categories/:id` | Bearer + `products.read` | Obtiene categoría del tenant |
+| POST | `/api/v1/categories` | Bearer + `products.create` | Crea categoría |
+| PATCH | `/api/v1/categories/:id` | Bearer + `products.read/update` | Actualiza categoría/jerarquía |
+| GET | `/api/v1/products` | Bearer + `products.read` | Lista paginada con variantes e imágenes |
+| GET | `/api/v1/products/:id` | Bearer + `products.read` | Obtiene producto completo |
+| POST | `/api/v1/products` | Bearer + `products.create` | Crea producto y variantes atómicamente |
+| PATCH | `/api/v1/products/:id` | Bearer + `products.read/update` | Actualiza producto |
+| DELETE | `/api/v1/products/:id` | Bearer + `products.read/delete` | Desactiva producto (204) |
+| POST | `/api/v1/products/:id/variants` | Bearer + `products.create` | Agrega variante |
+| PATCH | `/api/v1/products/:id/variants/:variantId` | Bearer + `products.read/update` | Actualiza variante |
+| PUT | `/api/v1/products/:id/images` | Bearer + `products.read/update` | Reemplaza imágenes atómicamente |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -81,15 +97,20 @@ no puede desactivarse y siempre debe quedar un Owner activo. Los roles `system`
 no se pueden modificar; roles personalizados sí pueden configurarse con las
 permission keys existentes.
 
-## Paginación de sucursales y bodegas
+## Paginación y catálogo
 
 Query: `page` (default 1), `limit` (default 20, máximo 100), `search` y
 `active=true|false`. La respuesta usa `{ data, meta: { page, limit, total,
 pageCount } }`. Una bodega solo puede referenciar una sucursal del mismo tenant;
 la regla está validada en servicio y mediante foreign key compuesta.
 
+Marcas y categorías utilizan el mismo contrato. Productos además aceptan
+`brandId`, `categoryId`, `species`, `active` y `search`; la búsqueda cubre
+nombre, slug, SKU y código de barras. Los bodies nunca aceptan
+`organizationId`. Importes `costAmount`, `priceAmount` y `salePriceAmount` son
+pesos CLP enteros y se serializan desde Decimal como strings exactos.
+
 ## Planificados
 
-`/api/v1/products`, `/categories`, `/brands`, `/customers`, `/inventory`,
-`/orders`, `/payments`, `/shipments`, `/channels`,
+`/api/v1/customers`, `/inventory`, `/orders`, `/payments`, `/shipments`, `/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.
