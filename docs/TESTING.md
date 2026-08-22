@@ -2,8 +2,9 @@
 
 ## Estado actual
 
-- 46 unit tests en 16 suites para configuración, health, Organization, password,
-  login/sesiones, permisos, usuarios, roles, sucursales, bodegas y catálogo.
+- 52 unit tests en 17 suites para configuración, health, Organization, password,
+  login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo e
+  inventario.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
@@ -13,6 +14,11 @@
   paginación inválida.
 - Seed de catálogo ejecutado dos veces; PostgreSQL conservó un único registro de
   marca, categoría, producto, variante e imagen.
+- Smoke concurrente real de inventario: 12 reservas simultáneas de 10 unidades
+  sobre 100 disponibles produjeron 10 éxitos y 2 conflictos 409; luego 10
+  liberaciones dejaron reservado en cero.
+- Replay de reserva/liberación idempotente, transferencia 80/20, reducción sin
+  stock 409 y trigger append-only de PostgreSQL verificados.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia

@@ -30,6 +30,12 @@ estructura inspirada en Keep a Changelog.
   filtros, creación atómica, variantes e imágenes.
 - Seed idempotente de catálogo ficticio y cobertura ampliada a 46 unit tests en
   16 suites, manteniendo 6 e2e.
+- Migración `add_inventory` con saldos por bodega/variante, reservas y ledger
+  protegido por constraints y trigger append-only.
+- API transaccional para ajustes, transferencias, reservas y liberaciones, con
+  locks de fila, prevención de negativos e idempotencia por referencia.
+- Permisos `inventory.transfer`/`inventory.reserve`, 52 unit tests en 17 suites
+  y smoke concurrente real contra PostgreSQL.
 
 ### Changed
 

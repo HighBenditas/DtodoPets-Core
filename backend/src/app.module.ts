@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { HealthModule } from './health/health.module';
+import { InventoryModule } from './inventory/inventory.module';
 import { LocationsModule } from './locations/locations.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -17,6 +18,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     AuthModule,
     CatalogModule,
     HealthModule,
+    InventoryModule,
     LocationsModule,
     OrganizationsModule,
     RolesModule,

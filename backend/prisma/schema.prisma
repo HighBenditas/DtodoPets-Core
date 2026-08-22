@@ -16,14 +16,17 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  roles      Role[]
-  users      User[]
-  locations  Location[]
-  warehouses Warehouse[]
-  brands     Brand[]
-  categories Category[]
-  products   Product[]
-  variants   ProductVariant[]
+  roles                 Role[]
+  users                 User[]
+  locations             Location[]
+  warehouses            Warehouse[]
+  brands                Brand[]
+  categories            Category[]
+  products              Product[]
+  variants              ProductVariant[]
+  inventoryBalances     InventoryBalance[]
+  inventoryMovements    InventoryMovement[]
+  inventoryReservations InventoryReservation[]
 }
 
 model Brand {
@@ -107,8 +110,9 @@ model ProductVariant {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  product      Product      @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product           Product            @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  inventoryBalances InventoryBalance[]
 
   @@unique([organizationId, sku])
   @@unique([organizationId, barcode])
@@ -130,6 +134,96 @@ model ProductImage {
 
   @@unique([productId, url])
   @@index([productId, sortOrder])
+}
+
+enum InventoryMovementType {
+  ADJUSTMENT
+  TRANSFER_OUT
+  TRANSFER_IN
+  RESERVATION
+  RELEASE
+}
+
+enum InventoryReservationStatus {
+  ACTIVE
+  RELEASED
+}
+
+model InventoryBalance {
+  id               String   @id @default(uuid())
+  organizationId   String
+  warehouseId      String
+  variantId        String
+  physicalQuantity Int      @default(0)
+  reservedQuantity Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  warehouse    Warehouse              @relation(fields: [warehouseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  variant      ProductVariant         @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  movements    InventoryMovement[]
+  reservations InventoryReservation[]
+
+  @@unique([organizationId, warehouseId, variantId])
+  @@unique([id, organizationId])
+  @@index([organizationId, updatedAt])
+  @@index([warehouseId])
+  @@index([variantId])
+}
+
+model InventoryMovement {
+  id             String                @id @default(uuid())
+  organizationId String
+  balanceId      String
+  operationId    String
+  type           InventoryMovementType
+  physicalDelta  Int                   @default(0)
+  reservedDelta  Int                   @default(0)
+  physicalBefore Int
+  physicalAfter  Int
+  reservedBefore Int
+  reservedAfter  Int
+  reason         String
+  referenceType  String?
+  referenceId    String?
+  actorUserId    String
+  createdAt      DateTime              @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  balance      InventoryBalance @relation(fields: [balanceId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  actor        User             @relation("InventoryMovementActor", fields: [actorUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+  @@index([balanceId, createdAt])
+  @@index([organizationId, operationId])
+  @@index([organizationId, referenceType, referenceId])
+}
+
+model InventoryReservation {
+  id               String                     @id @default(uuid())
+  organizationId   String
+  balanceId        String
+  quantity         Int
+  status           InventoryReservationStatus @default(ACTIVE)
+  reason           String
+  referenceType    String?
+  referenceId      String?
+  createdByUserId  String
+  releasedByUserId String?
+  releaseReason    String?
+  createdAt        DateTime                   @default(now())
+  releasedAt       DateTime?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  balance      InventoryBalance @relation(fields: [balanceId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User             @relation("InventoryReservationCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  releasedBy   User?            @relation("InventoryReservationReleaser", fields: [releasedByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([organizationId, referenceType, referenceId, balanceId])
+  @@unique([id, organizationId])
+  @@index([organizationId, status, createdAt])
+  @@index([balanceId, status])
 }
 
 model Location {
@@ -162,10 +256,12 @@ model Warehouse {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  location     Location?    @relation(fields: [locationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  location          Location?          @relation(fields: [locationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  inventoryBalances InventoryBalance[]
 
   @@unique([organizationId, name])
+  @@unique([id, organizationId])
   @@index([organizationId, active])
   @@index([locationId])
 }
@@ -181,11 +277,15 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  roles        UserRole[]
-  sessions     AuthSession[]
+  organization                  Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  roles                         UserRole[]
+  sessions                      AuthSession[]
+  inventoryMovements            InventoryMovement[]    @relation("InventoryMovementActor")
+  createdInventoryReservations  InventoryReservation[] @relation("InventoryReservationCreator")
+  releasedInventoryReservations InventoryReservation[] @relation("InventoryReservationReleaser")
 
   @@unique([organizationId, email])
+  @@unique([id, organizationId])
   @@index([organizationId, active])
 }
 

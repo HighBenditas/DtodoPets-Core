@@ -46,19 +46,29 @@ roadmap.
   reemplazar imágenes es atómico.
 - El endpoint DELETE de producto desactiva; no elimina físicamente.
 
+### Inventario
+
+- `available = physical - reserved`; las tres cantidades nunca son negativas y
+  reservado nunca supera físico.
+- Todo cambio crea un movimiento con actor, motivo, deltas y snapshots antes y
+  después. Los movimientos no se actualizan ni eliminan.
+- Ajustes solo modifican físico; reservas/liberaciones solo modifican reservado.
+- Transferir crea salida y entrada con el mismo `operationId` en una transacción.
+- Solo se reduce o transfiere stock disponible; falta de stock responde conflicto
+  sin efectos parciales.
+- Bodega, variante, saldo, actor y reserva pertenecen al tenant autenticado; FKs
+  compuestas refuerzan la regla.
+- Reservas con referencia estable son idempotentes. Liberar una reserva ya
+  liberada también es idempotente.
+- Locks de fila serializan operaciones concurrentes; las transferencias bloquean
+  saldos en orden estable.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy
 
 - Toda operación de negocio se limita a la organización autenticada.
 - Nunca se acepta un `organizationId` del body como prueba de autorización.
-
-### Inventario
-
-- `physical = available + reserved` cuando no existan estados adicionales.
-- Ningún cambio ocurre sin movimiento, actor/motivo y referencia aplicable.
-- Confirmar, cancelar y devolver pedidos actualiza reservas/stock atómicamente.
-- No se permite disponibilidad negativa accidental.
 
 ### Pedidos y dinero
 

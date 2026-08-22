@@ -7,9 +7,10 @@ queda disponible para capacidades que lo necesiten más adelante.
 
 ## Estado actual
 
-Foundation, Identity, Locations y Catalog están implementados en el backend. El
-hito activo es Inventory. Consulta [el estado del proyecto](docs/PROJECT_STATUS.md)
-y [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
+Foundation, Identity, Locations, Catalog e Inventory están implementados en el
+backend. El hito activo es Customers. Consulta
+[el estado del proyecto](docs/PROJECT_STATUS.md) y
+[el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 
 ## Stack
 

@@ -5,21 +5,21 @@ Actualizado: 2026-08-22.
 ## Estado actual
 
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
-Identity & Access, sucursales/bodegas y catálogo multi-tenant. PostgreSQL y
-Redis funcionan en Docker. El siguiente dominio incompleto es Inventory; aún no
-existe frontend.
+Identity & Access, sucursales/bodegas, catálogo e inventario multi-tenant.
+PostgreSQL y Redis funcionan en Docker. El siguiente dominio incompleto es
+Customers; aún no existe frontend.
 
 ## Último hito completado
 
-FASE 3 — Locations & Catalog.
+FASE 4 — Inventory.
 
 ## Hito actual
 
-FASE 4 — Inventory.
+FASE 5 — Customers.
 
 ## Próximo hito
 
-FASE 5 — Customers.
+FASE 6 — Orders.
 
 ## Funcionalidades terminadas
 
@@ -51,10 +51,18 @@ FASE 5 — Customers.
   lógica; seed idempotente con producto demostrativo.
 - 46 unit tests en 16 suites y 6 e2e correctos; smoke HTTP autenticado del
   catálogo aprobado contra PostgreSQL.
+- Saldo físico/reservado/disponible por bodega y variante, con constraints
+  anti-negativos y relaciones compuestas por tenant.
+- Ledger de movimientos append-only con actor, motivo, referencia, operación y
+  snapshots antes/después; trigger PostgreSQL bloquea UPDATE/DELETE.
+- Ajustes, transferencias, reservas y liberaciones transaccionales con bloqueo
+  de filas ordenado, permisos separados e idempotencia por referencia.
+- 52 unit tests en 17 suites y 6 e2e correctos; smoke concurrente real aprobó
+  10 reservas sobre 100 unidades y rechazó otras 2 con HTTP 409.
 
 ## Funcionalidades pendientes
 
-- Inventario, clientes y pedidos.
+- Clientes y pedidos.
 - Pagos, logística, canales, integraciones, promociones y devoluciones.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
@@ -76,6 +84,8 @@ FASE 5 — Customers.
   respaldados por sesiones revocables.
 - Roles y permisos se resuelven desde PostgreSQL en cada request autenticada;
   los nombres Owner/Admin/etc. solo son defaults provisionados.
+- Inventario usa saldo materializado y ledger inmutable; las mutaciones bloquean
+  filas con `FOR UPDATE` y las transferencias adquieren locks en orden estable.
 
 ## Migraciones actuales
 
@@ -85,11 +95,12 @@ FASE 5 — Customers.
 | `20260822213602_add_identity_access` | Aplicada | Usuarios, sesiones, roles y permisos |
 | `20260822220140_add_locations_warehouses` | Aplicada | Sucursales y bodegas multi-tenant |
 | `20260822221117_add_catalog` | Aplicada | Marcas, categorías, productos, variantes e imágenes |
+| `20260822223000_add_inventory` | Aplicada | Saldos, ledger, reservas, constraints y trigger append-only |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
-tests: una organización, dos usuarios, seis roles, veintiún permisos, una
-sucursal, una bodega, una marca, una categoría, un producto, una variante y una
-imagen.
+tests: una organización, dos usuarios, seis roles, veintitrés permisos, una
+sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
+imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
 
 ## Comandos útiles
 
@@ -114,6 +125,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar FASE 4 con saldo por bodega/variante y ledger inmutable. Diseñar
-ajustes, transferencias, reservas y liberaciones transaccionales, con prevención
-de stock negativo y tests de invariantes/concurrencia.
+Implementar FASE 5 con clientes y múltiples direcciones, normalización chilena
+de correo/teléfono/RUT, unicidades por tenant, paginación y pruebas de fuga entre
+organizaciones.

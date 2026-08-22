@@ -34,14 +34,14 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ SKU/código de barras únicos por organización y precios CLP seguros.
 - ✅ Paginación, filtros y búsqueda.
 
-## 🟡 FASE 4 — Inventory
+## ✅ FASE 4 — Inventory
 
-- Saldos físico, reservado y disponible por bodega/variante.
-- Ledger inmutable de movimientos.
-- Ajustes, transferencias, reservas y liberaciones transaccionales.
-- Prevención de stock negativo y tests de concurrencia.
+- ✅ Saldos físico, reservado y disponible por bodega/variante.
+- ✅ Ledger inmutable de movimientos.
+- ✅ Ajustes, transferencias, reservas y liberaciones transaccionales.
+- ✅ Prevención de stock negativo y tests de concurrencia.
 
-## ⬜ FASE 5 — Customers
+## 🟡 FASE 5 — Customers
 
 - Clientes y múltiples direcciones.
 - Normalización de correo/teléfono/RUT y prevención de duplicados.

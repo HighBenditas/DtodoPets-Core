@@ -51,6 +51,14 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | POST | `/api/v1/products/:id/variants` | Bearer + `products.create` | Agrega variante |
 | PATCH | `/api/v1/products/:id/variants/:variantId` | Bearer + `products.read/update` | Actualiza variante |
 | PUT | `/api/v1/products/:id/images` | Bearer + `products.read/update` | Reemplaza imágenes atómicamente |
+| GET | `/api/v1/inventory/balances` | Bearer + `inventory.read` | Lista saldos físico/reservado/disponible |
+| GET | `/api/v1/inventory/balances/:id` | Bearer + `inventory.read` | Obtiene saldo del tenant |
+| GET | `/api/v1/inventory/movements` | Bearer + `inventory.read` | Lista ledger append-only |
+| GET | `/api/v1/inventory/reservations` | Bearer + `inventory.read` | Lista reservas y estado |
+| POST | `/api/v1/inventory/adjustments` | Bearer + `inventory.adjust` | Ajusta stock físico y registra movimiento |
+| POST | `/api/v1/inventory/transfers` | Bearer + `inventory.transfer` | Transfiere entre bodegas atómicamente |
+| POST | `/api/v1/inventory/reservations` | Bearer + `inventory.reserve` | Reserva disponibilidad |
+| POST | `/api/v1/inventory/reservations/:id/release` | Bearer + `inventory.reserve` | Libera una reserva idempotentemente |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -110,7 +118,19 @@ nombre, slug, SKU y código de barras. Los bodies nunca aceptan
 `organizationId`. Importes `costAmount`, `priceAmount` y `salePriceAmount` son
 pesos CLP enteros y se serializan desde Decimal como strings exactos.
 
+## Inventario
+
+Balances aceptan `warehouseId`, `variantId`, `productId`, `search`, `page` y
+`limit`. Movimientos aceptan filtros por bodega, variante, tipo, operación y
+referencia; reservas por bodega, variante y estado.
+
+Ajustes usan `quantityDelta` distinto de cero. Transferencias y reservas usan
+`quantity` positivo. Toda mutación exige `reason`; `referenceType` y
+`referenceId` deben aparecer juntos. Repetir una reserva con la misma referencia
+y cantidad o liberar una reserva ya liberada devuelve `idempotent: true` sin un
+nuevo movimiento. Stock insuficiente responde 409.
+
 ## Planificados
 
-`/api/v1/customers`, `/inventory`, `/orders`, `/payments`, `/shipments`, `/channels`,
+`/api/v1/customers`, `/orders`, `/payments`, `/shipments`, `/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.

@@ -2,8 +2,8 @@
 
 ## Estado real
 
-PostgreSQL 18 contiene Foundation, Identity, Locations y Catalog. Hay cuatro
-migraciones aplicadas, incluida `20260822221117_add_catalog`.
+PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog e Inventory. Hay
+cinco migraciones aplicadas, incluida `20260822223000_add_inventory`.
 
 ```mermaid
 erDiagram
@@ -15,12 +15,21 @@ erDiagram
   Organization ||--o{ Category : owns
   Organization ||--o{ Product : owns
   Organization ||--o{ ProductVariant : owns
+  Organization ||--o{ InventoryBalance : owns
+  Organization ||--o{ InventoryMovement : owns
+  Organization ||--o{ InventoryReservation : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
   Category ||--o{ Product : classifies
   Product ||--|{ ProductVariant : offers
   Product ||--o{ ProductImage : displays
+  Warehouse ||--o{ InventoryBalance : stores
+  ProductVariant ||--o{ InventoryBalance : stocked
+  InventoryBalance ||--o{ InventoryMovement : records
+  InventoryBalance ||--o{ InventoryReservation : reserves
+  User ||--o{ InventoryMovement : acts
+  User ||--o{ InventoryReservation : creates
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -103,6 +112,33 @@ erDiagram
     string url
     int sortOrder
   }
+  InventoryBalance {
+    string id PK
+    string organizationId FK
+    string warehouseId FK
+    string variantId FK
+    int physicalQuantity
+    int reservedQuantity
+  }
+  InventoryMovement {
+    string id PK
+    string organizationId FK
+    string balanceId FK
+    string operationId
+    enum type
+    int physicalDelta
+    int reservedDelta
+    string actorUserId FK
+  }
+  InventoryReservation {
+    string id PK
+    string organizationId FK
+    string balanceId FK
+    int quantity
+    enum status
+    string referenceType
+    string referenceId
+  }
 ```
 
 ## Organization
@@ -152,11 +188,33 @@ Costos y precios se guardan como `Decimal(14,0)`: pesos CLP enteros, nunca
 `Float`. Checks de base exigen importes no negativos, oferta no superior al
 precio, peso positivo y orden de imagen no negativo.
 
+## Inventario
+
+`InventoryBalance` es único por organización, bodega y variante. Persiste
+`physicalQuantity` y `reservedQuantity`; disponible se calcula como
+`physical - reserved`. Checks de PostgreSQL garantizan cantidades no negativas y
+`reserved <= physical`. FKs compuestas impiden conectar bodegas, variantes,
+actores o reservas de tenants distintos.
+
+`InventoryMovement` conserva tipo, deltas, cantidades antes/después, actor,
+motivo, operación y referencia opcional. Checks verifican la aritmética y que
+cada tipo use deltas válidos. Un trigger rechaza cualquier UPDATE o DELETE: el
+ledger solo admite inserts.
+
+`InventoryReservation` identifica cada reserva, su cantidad, referencia externa
+opcional, creador y liberación. Una referencia es única por saldo y tenant. Los
+estados `ACTIVE`/`RELEASED` están ligados por constraint a sus campos de
+liberación.
+
+Las mutaciones bloquean saldos con `SELECT ... FOR UPDATE`. Transferencias
+bloquean ambos IDs ordenados y crean movimientos `TRANSFER_OUT`/`TRANSFER_IN`
+con el mismo `operationId` dentro de una sola transacción.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Inventario: saldo por bodega/variante más ledger de movimientos auditable.
+- Clientes: identidad normalizada y múltiples direcciones por tenant.
 - Pedidos: items conservan snapshots comerciales y no dependen del precio actual.
 - Pagos y envíos: entidades separadas del pedido.
 - Integraciones: constraints de idempotencia por canal/proveedor y referencia.

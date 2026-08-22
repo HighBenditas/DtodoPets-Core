@@ -31,6 +31,8 @@ no componentes ya implementados.
 - `LocationsModule` y `WarehousesModule` modelan la estructura física.
 - `CatalogModule` agrupa marcas, categorías jerárquicas, productos, variantes e
   imágenes; la creación de producto y sus dependencias es transaccional.
+- `InventoryModule` mantiene saldos y reservas, y escribe un ledger inmutable.
+  Usa locks de fila explícitos para serializar mutaciones concurrentes.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos
