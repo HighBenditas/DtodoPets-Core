@@ -254,20 +254,18 @@ export class ProductsService {
     brandId: string | undefined,
     categoryId: string | undefined,
   ) {
-    const [brand, category] = await Promise.all([
-      brandId
-        ? this.prisma.brand.findFirst({
-            where: { active: true, id: brandId, organizationId },
-            select: { id: true },
-          })
-        : null,
-      categoryId
-        ? this.prisma.category.findFirst({
-            where: { active: true, id: categoryId, organizationId },
-            select: { id: true },
-          })
-        : null,
-    ]);
+    const brand = brandId
+      ? await this.prisma.brand.findFirst({
+          where: { active: true, id: brandId, organizationId },
+          select: { id: true },
+        })
+      : null;
+    const category = categoryId
+      ? await this.prisma.category.findFirst({
+          where: { active: true, id: categoryId, organizationId },
+          select: { id: true },
+        })
+      : null;
     if (brandId && !brand) throw new BadRequestException('brandId is invalid');
     if (categoryId && !category)
       throw new BadRequestException('categoryId is invalid');

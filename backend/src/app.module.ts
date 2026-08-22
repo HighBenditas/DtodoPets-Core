@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { LocationsModule } from './locations/locations.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
@@ -23,6 +24,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     InventoryModule,
     LocationsModule,
     OrganizationsModule,
+    OrdersModule,
     RolesModule,
     UsersModule,
     WarehousesModule,

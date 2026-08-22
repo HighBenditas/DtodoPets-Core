@@ -7,9 +7,9 @@ queda disponible para capacidades que lo necesiten más adelante.
 
 ## Estado actual
 
-Foundation, Identity, Locations, Catalog e Inventory están implementados; el
-dominio Customers está operativo y espera Orders para calcular historial/gasto.
-El hito activo sigue siendo Customers. Consulta
+Foundation, Identity, Locations, Catalog, Inventory, Customers y Orders están
+implementados. El detalle de cliente ya proyecta historial y gasto desde pedidos
+confirmados/completados. El hito activo es Payments & Returns. Consulta
 [el estado del proyecto](docs/PROJECT_STATUS.md) y
 [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 

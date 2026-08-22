@@ -41,19 +41,19 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Ajustes, transferencias, reservas y liberaciones transaccionales.
 - ✅ Prevención de stock negativo y tests de concurrencia.
 
-## 🟡 FASE 5 — Customers
+## ✅ FASE 5 — Customers
 
 - ✅ Clientes y múltiples direcciones con default único activo.
 - ✅ Normalización de correo/teléfono/RUT y prevención de duplicados.
-- 🟡 Historial calculable de pedidos y gasto (requiere FASE 6).
+- ✅ Historial calculable de pedidos y gasto confirmado/completado.
 
-## ⬜ FASE 6 — Orders
+## ✅ FASE 6 — Orders
 
-- Pedido, items con snapshot comercial, dirección e historial de estados.
-- Totales monetarios CLP, descuentos y costo de envío.
-- Creación/cancelación atómica con inventario.
+- ✅ Pedido, items con snapshot comercial, dirección e historial de estados.
+- ✅ Totales monetarios CLP, descuentos y costo de envío.
+- ✅ Creación, confirmación y cancelación atómicas con inventario.
 
-## ⬜ FASE 7 — Payments & Returns
+## 🟡 FASE 7 — Payments & Returns
 
 - Pagos separados del pedido, múltiples pagos y reembolsos.
 - Devoluciones parciales y reintegro opcional de stock.

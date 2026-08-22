@@ -2,9 +2,9 @@
 
 ## Estado real
 
-PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory y
-Customers. Hay seis migraciones aplicadas, incluida
-`20260822230000_add_customers`.
+PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
+Customers y Orders. Hay ocho migraciones aplicadas; las últimas son
+`20260822233000_extend_inventory_for_orders` y `20260822233100_add_orders`.
 
 ```mermaid
 erDiagram
@@ -21,6 +21,9 @@ erDiagram
   Organization ||--o{ InventoryReservation : owns
   Organization ||--o{ Customer : owns
   Organization ||--o{ CustomerAddress : owns
+  Organization ||--o{ Order : owns
+  Organization ||--o{ OrderItem : owns
+  Organization ||--o{ OrderStatusHistory : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -31,9 +34,16 @@ erDiagram
   ProductVariant ||--o{ InventoryBalance : stocked
   InventoryBalance ||--o{ InventoryMovement : records
   InventoryBalance ||--o{ InventoryReservation : reserves
+  InventoryReservation ||--o| OrderItem : fulfills
   User ||--o{ InventoryMovement : acts
   User ||--o{ InventoryReservation : creates
   Customer ||--o{ CustomerAddress : has
+  Customer ||--o{ Order : places
+  CustomerAddress ||--o{ Order : ships_to
+  Warehouse ||--o{ Order : fulfills
+  Order ||--|{ OrderItem : contains
+  Order ||--o{ OrderStatusHistory : records
+  ProductVariant ||--o{ OrderItem : snapshots
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -161,6 +171,35 @@ erDiagram
     boolean isDefault
     boolean active
   }
+  Order {
+    string id PK
+    string organizationId FK
+    string number
+    string customerId FK
+    string warehouseId FK
+    enum status
+    decimal totalAmount
+    json customerSnapshot
+    json shippingSnapshot
+  }
+  OrderItem {
+    string id PK
+    string organizationId FK
+    string orderId FK
+    string variantId FK
+    string skuSnapshot
+    decimal unitPriceAmount
+    int quantity
+    decimal totalAmount
+  }
+  OrderStatusHistory {
+    string id PK
+    string organizationId FK
+    string orderId FK
+    enum status
+    string reason
+    string actorUserId FK
+  }
 ```
 
 ## Organization
@@ -224,9 +263,10 @@ cada tipo use deltas válidos. Un trigger rechaza cualquier UPDATE o DELETE: el
 ledger solo admite inserts.
 
 `InventoryReservation` identifica cada reserva, su cantidad, referencia externa
-opcional, creador y liberación. Una referencia es única por saldo y tenant. Los
-estados `ACTIVE`/`RELEASED` están ligados por constraint a sus campos de
-liberación.
+opcional, creador y cierre. Una referencia es única por saldo y tenant. Los
+estados `ACTIVE`/`RELEASED`/`CONSUMED` están ligados por constraints a sus
+campos de liberación o consumo. Confirmar un pedido crea un movimiento `COMMIT`
+que reduce físico y reservado en la misma cantidad.
 
 Las mutaciones bloquean saldos con `SELECT ... FOR UPDATE`. Transferencias
 bloquean ambos IDs ordenados y crean movimientos `TRANSFER_OUT`/`TRANSFER_IN`
@@ -244,11 +284,27 @@ compuesta hacia el cliente/tenant. La etiqueta es única por cliente. Un índice
 parcial permite como máximo una dirección activa con `isDefault=true`; el
 servicio bloquea al cliente para cambiar el default sin carreras.
 
+## Pedidos
+
+`Order` es único por número y organización, referencia cliente, dirección y
+bodega del mismo tenant mediante FKs compuestas, y conserva snapshots JSON de
+cliente/despacho. Estados disponibles: `PENDING`, `CONFIRMED`, `CANCELLED` y
+`COMPLETED`. Checks exigen moneda CLP, importes no negativos, total igual a
+subtotal menos descuento más envío y timestamps coherentes con el estado.
+
+`OrderItem` conserva SKU, nombre, precio unitario, cantidad, descuentos y
+totales históricos. Cada variante aparece una vez por pedido y su subtotal debe
+ser exactamente precio por cantidad. La reserva de inventario asociada queda
+únicamente ligada a ese item.
+
+`OrderStatusHistory` registra estado, motivo, actor y fecha sin exponer una ruta
+de actualización. Creación, cambio de estado, reservas y movimientos ocurren en
+la misma transacción.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Pedidos: items conservan snapshots comerciales y no dependen del precio actual.
 - Pagos y envíos: entidades separadas del pedido.
 - Integraciones: constraints de idempotencia por canal/proveedor y referencia.
 

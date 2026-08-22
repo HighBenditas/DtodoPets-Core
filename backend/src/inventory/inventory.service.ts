@@ -249,14 +249,16 @@ export class InventoryService {
         'Source and destination warehouses must be different',
       );
     }
-    const [sourcePrepared, destinationPrepared] = await Promise.all([
-      this.prepareBalance(organizationId, dto.sourceWarehouseId, dto.variantId),
-      this.prepareBalance(
-        organizationId,
-        dto.destinationWarehouseId,
-        dto.variantId,
-      ),
-    ]);
+    const sourcePrepared = await this.prepareBalance(
+      organizationId,
+      dto.sourceWarehouseId,
+      dto.variantId,
+    );
+    const destinationPrepared = await this.prepareBalance(
+      organizationId,
+      dto.destinationWarehouseId,
+      dto.variantId,
+    );
     const reference = getReferencePair(dto.referenceType, dto.referenceId);
     const reason = dto.reason.trim();
     const operationId = randomUUID();
@@ -492,21 +494,19 @@ export class InventoryService {
     warehouseId: string,
     variantId: string,
   ) {
-    const [warehouse, variant] = await Promise.all([
-      this.prisma.warehouse.findFirst({
-        where: { active: true, id: warehouseId, organizationId },
-        select: { id: true },
-      }),
-      this.prisma.productVariant.findFirst({
-        where: {
-          active: true,
-          id: variantId,
-          organizationId,
-          product: { is: { active: true } },
-        },
-        select: { id: true },
-      }),
-    ]);
+    const warehouse = await this.prisma.warehouse.findFirst({
+      where: { active: true, id: warehouseId, organizationId },
+      select: { id: true },
+    });
+    const variant = await this.prisma.productVariant.findFirst({
+      where: {
+        active: true,
+        id: variantId,
+        organizationId,
+        product: { is: { active: true } },
+      },
+      select: { id: true },
+    });
     if (!warehouse) throw new BadRequestException('warehouseId is invalid');
     if (!variant) throw new BadRequestException('variantId is invalid');
     return this.prisma.inventoryBalance.upsert({

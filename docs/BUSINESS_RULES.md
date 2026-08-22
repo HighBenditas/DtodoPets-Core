@@ -75,18 +75,29 @@ roadmap.
   dirección activa más antigua.
 - Desactivar clientes/direcciones conserva sus datos para historial futuro.
 
+### Pedidos y dinero
+
+- Todo pedido pertenece al tenant autenticado y recibe un número único dentro de
+  la organización.
+- Cliente, dirección, bodega y variantes deben estar activos y pertenecer al
+  mismo tenant; las FKs compuestas refuerzan el aislamiento.
+- Un item conserva snapshots de SKU, nombre y precio. Cliente y dirección
+  también se copian para que cambios posteriores no reescriban el historial.
+- Todos los importes son enteros CLP exactos. El servidor obtiene precios del
+  catálogo y calcula subtotales, descuentos, envío y total.
+- Crear un pedido `PENDING` reserva toda su disponibilidad o no crea nada.
+- Confirmar consume físico y reservado; cancelar solo libera lo reservado. Cada
+  transición escribe movimientos e historial en la misma transacción.
+- Solo `PENDING` puede confirmarse o cancelarse. Repetir confirmación o
+  cancelación ya aplicada es idempotente; otra transición terminal responde 409.
+- El gasto del cliente suma únicamente pedidos `CONFIRMED` o `COMPLETED`.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy
 
 - Toda operación de negocio se limita a la organización autenticada.
 - Nunca se acepta un `organizationId` del body como prueba de autorización.
-
-### Pedidos y dinero
-
-- Un item conserva SKU, nombre, precio y descuento históricos.
-- Totales se calculan con tipos monetarios exactos para CLP.
-- El pedido se separa de pagos y shipments.
 
 ### Idempotencia
 

@@ -35,6 +35,8 @@ no componentes ya implementados.
   Usa locks de fila explícitos para serializar mutaciones concurrentes.
 - `CustomersModule` mantiene identidad normalizada y direcciones; serializa los
   cambios de dirección default mediante lock del cliente.
+- `OrdersModule` preserva snapshots/totales y coordina pedido, reservas, ledger
+  e historial de estados dentro de transacciones con locks de fila.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos

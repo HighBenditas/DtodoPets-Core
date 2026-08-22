@@ -21,6 +21,8 @@
 - Los `.env` están ignorados y existen ejemplos sin secretos.
 - Clientes, RUT, teléfonos y direcciones solo se exponen con permisos
   `customers.*`, siempre filtrados por tenant; no deben incluirse en logs.
+- Pedidos y snapshots personales requieren permisos `orders.*`, se filtran por
+  tenant y tampoco deben incluirse íntegros en logs o mensajes de error.
 
 ## Riesgos pendientes
 

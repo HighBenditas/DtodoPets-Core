@@ -5,21 +5,21 @@ Actualizado: 2026-08-22.
 ## Estado actual
 
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
-Identity & Access, sucursales/bodegas, catálogo e inventario multi-tenant.
-PostgreSQL y Redis funcionan en Docker. El siguiente dominio incompleto es
-Customers; aún no existe frontend.
+Identity & Access, sucursales/bodegas, catálogo, inventario, clientes y pedidos
+multi-tenant. PostgreSQL y Redis funcionan en Docker. El siguiente dominio
+incompleto es Payments & Returns; aún no existe frontend.
 
 ## Último hito completado
 
-FASE 4 — Inventory.
+FASE 6 — Orders.
 
 ## Hito actual
 
-FASE 5 — Customers.
+FASE 7 — Payments & Returns.
 
 ## Próximo hito
 
-FASE 6 — Orders.
+FASE 8 — Logistics.
 
 ## Funcionalidades terminadas
 
@@ -65,11 +65,20 @@ FASE 6 — Orders.
   promoción transaccionales bajo lock del cliente.
 - 65 unit tests en 19 suites y 6 e2e correctos; smoke HTTP real aprobó
   normalización, duplicado 409, RUT inválido 400 y ciclo de direcciones default.
+- Pedidos multi-tenant paginados con items, dirección y datos comerciales
+  históricos; importes CLP exactos calculados en servidor.
+- Creación `PENDING` reserva inventario en la misma transacción; confirmación
+  consume físico/reservado y cancelación libera reservas bajo locks de fila.
+- Historial de estados append-only, transiciones con motivo y reintentos de
+  confirmación/cancelación idempotentes.
+- El detalle de cliente proyecta conteos por estado y gasto confirmado/completado.
+- 72 unit tests en 20 suites y 6 e2e correctos; smoke HTTP real aprobó creación,
+  confirmación, cancelación, replays idempotentes y stock insuficiente 409.
 
 ## Funcionalidades pendientes
 
-- Historial/gasto de clientes (depende de Orders) y pedidos.
-- Pagos, logística, canales, integraciones, promociones y devoluciones.
+- Pagos, reembolsos y devoluciones parciales.
+- Logística, canales, integraciones y promociones.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
 ## Problemas conocidos
@@ -92,6 +101,8 @@ FASE 6 — Orders.
   los nombres Owner/Admin/etc. solo son defaults provisionados.
 - Inventario usa saldo materializado y ledger inmutable; las mutaciones bloquean
   filas con `FOR UPDATE` y las transferencias adquieren locks en orden estable.
+- Pedidos preservan snapshots de cliente, dirección, SKU, nombre y precio; sus
+  transiciones de inventario e historial son parte de la misma transacción.
 
 ## Migraciones actuales
 
@@ -103,12 +114,15 @@ FASE 6 — Orders.
 | `20260822221117_add_catalog` | Aplicada | Marcas, categorías, productos, variantes e imágenes |
 | `20260822223000_add_inventory` | Aplicada | Saldos, ledger, reservas, constraints y trigger append-only |
 | `20260822230000_add_customers` | Aplicada | Clientes, direcciones, unicidades e índice de default activo |
+| `20260822233000_extend_inventory_for_orders` | Aplicada | Estados `CONSUMED` y movimiento `COMMIT` para confirmar pedidos |
+| `20260822233100_add_orders` | Aplicada | Pedidos, items, snapshots, totales e historial de estados |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, veintitrés permisos, una
 sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
 imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
-También contiene un cliente ficticio con dos direcciones del smoke de Customers.
+También contiene un cliente ficticio con dos direcciones y dos pedidos del
+smoke de Orders: uno confirmado y otro cancelado.
 
 ## Comandos útiles
 
@@ -133,6 +147,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Orders y sus snapshots/totales para completar la proyección de
-historial y gasto de Customer. La creación/cancelación debe coordinar reservas
-de inventario atómicamente.
+Implementar Payments & Returns como entidades separadas del pedido: múltiples
+pagos, reembolsos y devoluciones parciales, con importes CLP exactos,
+idempotencia de proveedor y reintegro opcional de inventario.

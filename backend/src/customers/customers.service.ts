@@ -73,11 +73,38 @@ export class CustomersService {
       include: customerDetailInclude,
     });
     if (!customer) throw new NotFoundException('Customer not found');
-    return customer;
+    const confirmed = await this.prisma.order.aggregate({
+      where: {
+        customerId: id,
+        organizationId,
+        status: { in: ['CONFIRMED', 'COMPLETED'] },
+      },
+      _count: { _all: true },
+      _sum: { totalAmount: true },
+    });
+    const statuses = await this.prisma.order.groupBy({
+      by: ['status'],
+      where: { customerId: id, organizationId },
+      _count: { _all: true },
+    });
+    return {
+      ...customer,
+      orderSummary: {
+        confirmedOrderCount: confirmed._count._all,
+        statusCounts: Object.fromEntries(
+          statuses.map((status) => [status.status, status._count._all]),
+        ),
+        totalSpentAmount: confirmed._sum.totalAmount ?? new Prisma.Decimal(0),
+      },
+    };
   }
 
   async findAddresses(organizationId: string, customerId: string) {
-    await this.findOne(organizationId, customerId);
+    const exists = await this.prisma.customer.findFirst({
+      where: { id: customerId, organizationId },
+      select: { id: true },
+    });
+    if (!exists) throw new NotFoundException('Customer not found');
     return this.prisma.customerAddress.findMany({
       where: { customerId, organizationId },
       orderBy: [{ isDefault: 'desc' }, { active: 'desc' }, { label: 'asc' }],

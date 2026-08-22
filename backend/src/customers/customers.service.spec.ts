@@ -28,6 +28,7 @@ describe('CustomersService', () => {
       update: jest.Mock;
     };
     customerAddress: { findMany: jest.Mock };
+    order: { aggregate: jest.Mock; groupBy: jest.Mock };
   };
 
   beforeEach(async () => {
@@ -41,6 +42,13 @@ describe('CustomersService', () => {
         update: jest.fn(),
       },
       customerAddress: { findMany: jest.fn() },
+      order: {
+        aggregate: jest.fn().mockResolvedValue({
+          _count: { _all: 0 },
+          _sum: { totalAmount: null },
+        }),
+        groupBy: jest.fn().mockResolvedValue([]),
+      },
     };
     const module = await Test.createTestingModule({
       providers: [

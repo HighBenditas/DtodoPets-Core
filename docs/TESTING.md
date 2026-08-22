@@ -2,9 +2,9 @@
 
 ## Estado actual
 
-- 65 unit tests en 19 suites para configuración, health, Organization, password,
+- 72 unit tests en 20 suites para configuración, health, Organization, password,
   login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo,
-  inventario y clientes.
+  inventario, clientes y pedidos.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
@@ -21,6 +21,9 @@
   stock 409 y trigger append-only de PostgreSQL verificados.
 - Smoke HTTP real de Customers: identidad chilena normalizada, duplicado 409,
   RUT inválido 400, búsqueda y transición/promoción de dirección default.
+- Smoke HTTP real de Orders: totales CLP y reserva al crear, consumo al confirmar,
+  liberación al cancelar, replays idempotentes, historial/proyección de cliente y
+  rechazo 409 por stock insuficiente.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia
@@ -40,7 +43,7 @@ identifique explícitamente un entorno de test.
 - Permisos y aislamiento entre organizaciones.
 - CRUD de catálogo con validación/paginación.
 - Ajustes/reservas y falta de stock.
-- Creación y cancelación atómica de pedidos.
+- Creación, confirmación y cancelación atómica de pedidos.
 - Pagos, devoluciones e idempotencia.
 
 ## Comandos

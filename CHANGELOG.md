@@ -41,10 +41,19 @@ estructura inspirada en Keep a Changelog.
 - API paginada de clientes con normalización/validación chilena y gestión
   transaccional de direcciones.
 - Cobertura ampliada a 65 unit tests en 19 suites y smoke HTTP real de Customers.
+- Migraciones `extend_inventory_for_orders` y `add_orders` con reservas
+  consumibles, movimiento `COMMIT`, pedidos, items, snapshots e historial.
+- API paginada de pedidos con creación, confirmación y cancelación atómicas;
+  precios/totales calculados en servidor y transiciones idempotentes.
+- Proyección de conteos y gasto confirmado/completado en el detalle de cliente.
+- Cobertura ampliada a 72 unit tests en 20 suites, manteniendo 6 e2e, y smoke
+  HTTP real del ciclo completo de Orders contra PostgreSQL.
 
 ### Changed
 
 - ESLint ignora el cliente generado por Prisma.
+- Las consultas independientes de servicios se ejecutan secuencialmente para
+  evitar el uso concurrente de una conexión, compatible con el próximo `pg@9`.
 
 ### Fixed
 

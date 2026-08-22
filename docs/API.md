@@ -67,6 +67,11 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | POST | `/api/v1/customers/:id/addresses` | Bearer + `customers.update` | Agrega dirección |
 | PATCH | `/api/v1/customers/:id/addresses/:addressId` | Bearer + `customers.update` | Actualiza/desactiva dirección |
 | PUT | `/api/v1/customers/:id/addresses/:addressId/default` | Bearer + `customers.update` | Define dirección default |
+| GET | `/api/v1/orders` | Bearer + `orders.read` | Lista pedidos paginados del tenant |
+| GET | `/api/v1/orders/:id` | Bearer + `orders.read` | Obtiene items, reservas e historial |
+| POST | `/api/v1/orders` | Bearer + `orders.create` | Crea pedido y reserva stock atómicamente |
+| POST | `/api/v1/orders/:id/confirm` | Bearer + `orders.update` | Confirma y consume inventario |
+| POST | `/api/v1/orders/:id/cancel` | Bearer + `orders.update` | Cancela y libera reservas |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -149,7 +154,27 @@ La primera dirección activa siempre se vuelve default. Crear otra con
 `isDefault=true` o usar la ruta `/default` reemplaza la anterior atómicamente.
 Desactivar la default promueve la dirección activa más antigua.
 
+El detalle de cliente incluye `orderSummary`: conteo de pedidos
+confirmados/completados, conteos por estado y gasto total exacto de esos estados.
+
+## Pedidos
+
+La lista acepta `page`, `limit`, `status`, `customerId` y `search`; la búsqueda
+cubre número de pedido y nombre de cliente. Los importes Decimal se serializan
+como strings CLP exactos.
+
+Crear exige cliente y dirección activos, bodega activa y entre 1 y 100 items con
+variantes activas y distintas. El servidor toma el precio de oferta vigente o,
+en su ausencia, el precio normal; el cliente solo envía `variantId`, `quantity`
+y descuento opcional. También acepta descuento global, envío y notas. La
+respuesta queda `PENDING` y reserva el inventario dentro de la transacción.
+
+Confirmar o cancelar exige `{ "reason": "..." }`. Confirmar consume físico y
+reservado y marca cada reserva `CONSUMED`; cancelar libera las reservas. Repetir
+la misma transición terminal devuelve `idempotent: true` sin nuevos efectos.
+Una transición incompatible responde 409, al igual que stock insuficiente.
+
 ## Planificados
 
-`/api/v1/orders`, `/payments`, `/shipments`, `/channels`,
+`/api/v1/payments`, `/returns`, `/shipments`, `/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.
