@@ -2,11 +2,12 @@
 
 ## Estado actual
 
-- 28 unit tests en 10 suites para configuración, health, Organization, password,
-  login/sesiones, permisos, usuarios y roles.
+- 34 unit tests en 12 suites para configuración, health, Organization, password,
+  login/sesiones, permisos, usuarios, roles, sucursales y bodegas.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
+- Smoke HTTP real de sucursales/bodegas, paginación y validación aprobado.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia

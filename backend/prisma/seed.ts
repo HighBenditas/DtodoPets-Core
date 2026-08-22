@@ -76,6 +76,38 @@ async function main() {
       update: {},
     });
 
+    const location = await transaction.location.upsert({
+      where: {
+        organizationId_name: {
+          name: 'Sucursal Desarrollo',
+          organizationId: organization.id,
+        },
+      },
+      create: {
+        city: 'Santiago',
+        commune: 'Santiago',
+        name: 'Sucursal Desarrollo',
+        organizationId: organization.id,
+        region: 'Región Metropolitana',
+      },
+      update: {},
+    });
+
+    await transaction.warehouse.upsert({
+      where: {
+        organizationId_name: {
+          name: 'Bodega Desarrollo',
+          organizationId: organization.id,
+        },
+      },
+      create: {
+        locationId: location.id,
+        name: 'Bodega Desarrollo',
+        organizationId: organization.id,
+      },
+      update: { locationId: location.id },
+    });
+
     return { email: user.email, organizationSlug: organization.slug };
   });
 

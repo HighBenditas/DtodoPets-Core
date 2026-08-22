@@ -24,6 +24,14 @@ roadmap.
 - Los roles de sistema son inmutables; la autorización usa permisos persistidos,
   por lo que se permiten roles personalizados.
 
+### Sucursales y bodegas
+
+- Nombres son únicos dentro de la organización.
+- Una bodega puede no pertenecer a una sucursal.
+- Si tiene sucursal, ambas deben pertenecer al mismo tenant; la base también lo
+  garantiza con una foreign key compuesta.
+- Desactivar conserva historial y relaciones; no se expone borrado físico.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

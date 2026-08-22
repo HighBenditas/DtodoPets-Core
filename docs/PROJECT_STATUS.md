@@ -40,6 +40,9 @@ FASE 4 — Inventory.
 - Compilación, typecheck, lint, 28 unit tests y 6 e2e correctos.
 - Smoke test real de bootstrap, login, tenant, creación de Seller, refresh y
   logout contra PostgreSQL.
+- Sucursales y bodegas multi-tenant con relación compuesta protegida por FK,
+  búsqueda, filtro de estado y paginación.
+- Seed/smoke HTTP de sucursal y bodega aprobado; 34 unit tests y 6 e2e.
 
 ## Funcionalidades pendientes
 
@@ -72,9 +75,11 @@ FASE 4 — Inventory.
 | --- | --- | --- |
 | `20260817231441_init_organization` | Aplicada | Tabla e índice único de `Organization` |
 | `20260822213602_add_identity_access` | Aplicada | Usuarios, sesiones, roles y permisos |
+| `20260822220140_add_locations_warehouses` | Aplicada | Sucursales y bodegas multi-tenant |
 
-La base local contiene datos ficticios de desarrollo creados durante el smoke
-test: una organización, dos usuarios, seis roles y diecisiete permisos.
+La base local contiene datos ficticios de desarrollo creados durante los smoke
+tests: una organización, dos usuarios, seis roles, veintiún permisos, una
+sucursal y una bodega.
 
 ## Comandos útiles
 
@@ -99,6 +104,5 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar FASE 3 empezando por `Location` y `Warehouse`, seguido por `Brand`,
-`Category`, `Product` y `ProductVariant`, con constraints multi-tenant, dinero CLP,
-paginación, filtros y tests.
+Completar FASE 3 con `Brand`, `Category`, `Product` y `ProductVariant`, usando
+constraints multi-tenant, dinero CLP exacto, paginación, filtros y tests.

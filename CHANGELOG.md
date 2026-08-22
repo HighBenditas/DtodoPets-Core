@@ -21,6 +21,9 @@ estructura inspirada en Keep a Changelog.
 - Administración multi-tenant de usuarios y roles personalizados.
 - Seed idempotente con Owner y seis roles de sistema.
 - Cobertura ampliada a 28 unit tests y 6 e2e.
+- Migración `add_locations_warehouses` con FK compuesta anti-fuga de tenant.
+- API paginada de sucursales y bodegas, nuevos permisos y seed ficticio.
+- Cobertura ampliada a 34 unit tests manteniendo 6 e2e.
 
 ### Changed
 

@@ -29,7 +29,7 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 
 ## 🟡 FASE 3 — Locations & Catalog
 
-- Sucursales y bodegas.
+- ✅ Sucursales y bodegas multi-tenant, paginadas y sembradas para desarrollo.
 - Marcas, categorías, productos y variantes.
 - SKU/código de barras únicos por organización y precios CLP seguros.
 - Paginación, filtros y búsqueda.

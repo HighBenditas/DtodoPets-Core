@@ -77,8 +77,8 @@ cd backend
 npm run prisma:seed
 ```
 
-El seed es idempotente y crea la organización, permisos, seis roles de sistema y
-el Owner local cuando no existe. Los valores predeterminados son
+El seed es idempotente y crea la organización, permisos, seis roles de sistema,
+el Owner local, una sucursal y una bodega ficticias. Los valores predeterminados son
 `admin@dtodopets.local` / `Change-this-development-password-123!`; son
 credenciales exclusivamente locales y deben sobrescribirse mediante las
 variables `SEED_*` descritas en `backend/.env.example`.

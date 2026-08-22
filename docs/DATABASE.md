@@ -9,6 +9,9 @@ PostgreSQL 18 contiene las tablas de Organization e Identity. Están aplicadas
 erDiagram
   Organization ||--o{ User : has
   Organization ||--o{ Role : defines
+  Organization ||--o{ Location : owns
+  Organization ||--o{ Warehouse : owns
+  Location ||--o{ Warehouse : contains
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -46,6 +49,19 @@ erDiagram
     datetime expiresAt
     datetime revokedAt
   }
+  Location {
+    string id PK
+    string organizationId FK
+    string name
+    boolean active
+  }
+  Warehouse {
+    string id PK
+    string organizationId FK
+    string locationId FK
+    string name
+    boolean active
+  }
 ```
 
 ## Organization
@@ -71,6 +87,13 @@ desde relaciones persistidas.
 `AuthSession` conserva únicamente SHA-256 del refresh token opaco, expiración,
 revocación y último uso. Rotar actualiza el hash mediante un `updateMany`
 condicional para que dos refresh simultáneos no puedan tener éxito.
+
+## Sucursales y bodegas
+
+Nombres son únicos por organización. La FK compuesta de `Warehouse(locationId,
+organizationId)` a `Location(id, organizationId)` impide asociar físicamente una
+bodega a una sucursal de otro tenant. `locationId` puede ser nulo para bodegas
+sin sucursal.
 
 ## Estrategia prevista
 

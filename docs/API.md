@@ -27,6 +27,14 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | PATCH | `/api/v1/roles/:id` | Bearer + `users.manage` | Edita rol no-system |
 | PUT | `/api/v1/roles/:id/permissions` | Bearer + `users.manage` | Reemplaza permisos de rol no-system |
 | DELETE | `/api/v1/roles/:id` | Bearer + `users.manage` | Elimina rol no asignado (204) |
+| GET | `/api/v1/locations` | Bearer + `locations.read` | Lista paginada del tenant |
+| GET | `/api/v1/locations/:id` | Bearer + `locations.read` | Obtiene sucursal del tenant |
+| POST | `/api/v1/locations` | Bearer + `locations.manage` | Crea sucursal |
+| PATCH | `/api/v1/locations/:id` | Bearer + `locations.read/manage` | Actualiza sucursal/estado |
+| GET | `/api/v1/warehouses` | Bearer + `warehouses.read` | Lista paginada con sucursal |
+| GET | `/api/v1/warehouses/:id` | Bearer + `warehouses.read` | Obtiene bodega del tenant |
+| POST | `/api/v1/warehouses` | Bearer + `warehouses.manage` | Crea bodega |
+| PATCH | `/api/v1/warehouses/:id` | Bearer + `warehouses.read/manage` | Actualiza bodega/estado |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -73,8 +81,15 @@ no puede desactivarse y siempre debe quedar un Owner activo. Los roles `system`
 no se pueden modificar; roles personalizados sí pueden configurarse con las
 permission keys existentes.
 
+## Paginación de sucursales y bodegas
+
+Query: `page` (default 1), `limit` (default 20, máximo 100), `search` y
+`active=true|false`. La respuesta usa `{ data, meta: { page, limit, total,
+pageCount } }`. Una bodega solo puede referenciar una sucursal del mismo tenant;
+la regla está validada en servicio y mediante foreign key compuesta.
+
 ## Planificados
 
-`/api/v1/locations`, `/warehouses`, `/products`, `/categories`, `/brands`,
-`/customers`, `/inventory`, `/orders`, `/payments`, `/shipments`, `/channels`,
+`/api/v1/products`, `/categories`, `/brands`, `/customers`, `/inventory`,
+`/orders`, `/payments`, `/shipments`, `/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.

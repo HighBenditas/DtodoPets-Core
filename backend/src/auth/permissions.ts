@@ -10,6 +10,8 @@ export const PERMISSIONS = {
   ordersCreate: 'orders.create',
   ordersRead: 'orders.read',
   ordersUpdate: 'orders.update',
+  locationsManage: 'locations.manage',
+  locationsRead: 'locations.read',
   organizationsRead: 'organizations.read',
   organizationsUpdate: 'organizations.update',
   productsCreate: 'products.create',
@@ -18,6 +20,8 @@ export const PERMISSIONS = {
   productsUpdate: 'products.update',
   reportsRead: 'reports.read',
   usersManage: 'users.manage',
+  warehousesManage: 'warehouses.manage',
+  warehousesRead: 'warehouses.read',
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -62,6 +66,7 @@ export const DEFAULT_ROLES: ReadonlyArray<{
       PERMISSIONS.customersRead,
       PERMISSIONS.customersUpdate,
       PERMISSIONS.inventoryRead,
+      PERMISSIONS.locationsRead,
       PERMISSIONS.ordersCreate,
       PERMISSIONS.ordersRead,
       PERMISSIONS.ordersUpdate,
@@ -75,9 +80,11 @@ export const DEFAULT_ROLES: ReadonlyArray<{
     permissions: [
       PERMISSIONS.inventoryAdjust,
       PERMISSIONS.inventoryRead,
+      PERMISSIONS.locationsRead,
       PERMISSIONS.ordersRead,
       PERMISSIONS.ordersUpdate,
       PERMISSIONS.productsRead,
+      PERMISSIONS.warehousesRead,
     ],
   },
   {
@@ -87,10 +94,12 @@ export const DEFAULT_ROLES: ReadonlyArray<{
     permissions: [
       PERMISSIONS.customersRead,
       PERMISSIONS.inventoryRead,
+      PERMISSIONS.locationsRead,
       PERMISSIONS.ordersRead,
       PERMISSIONS.organizationsRead,
       PERMISSIONS.productsRead,
       PERMISSIONS.reportsRead,
+      PERMISSIONS.warehousesRead,
     ],
   },
 ];
