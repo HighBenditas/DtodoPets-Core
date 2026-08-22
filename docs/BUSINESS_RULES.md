@@ -11,6 +11,18 @@ roadmap.
 - `slug` se normaliza a minúsculas ASCII y guiones.
 - `slug` es único globalmente.
 - `active` vale `true` por defecto.
+- Un usuario autenticado solo puede leer/editar su propia organización.
+
+### Identity & Access
+
+- Bootstrap solo funciona mientras no exista ningún usuario y se serializa con
+  un advisory lock de PostgreSQL.
+- Login requiere slug de organización y correo normalizado.
+- Logout o desactivación invalida acceso en la siguiente request.
+- Refresh rota el token; el valor anterior no puede reutilizarse.
+- Solo Owner puede asignar/administrar Owner y siempre queda uno activo.
+- Los roles de sistema son inmutables; la autorización usa permisos persistidos,
+  por lo que se permiten roles personalizados.
 
 ## Comprometidas para próximos hitos
 

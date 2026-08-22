@@ -16,17 +16,18 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Health check, correlation ID, headers seguros y CORS configurable.
 - ✅ Scripts separados para lint, lint fix, typecheck y validación completa.
 
-## 🟡 FASE 2 — Identity & Organizations
+## ✅ FASE 2 — Identity & Organizations
 
-- Usuario, sesión renovable y hashing seguro de contraseñas.
-- Login, logout, refresh y perfil autenticado.
-- Roles y permisos persistidos; Owner/Admin/Manager/Seller/Warehouse/Viewer.
-- Guards de autenticación y permisos.
-- Aislamiento por organización y administración de usuarios.
-- Seed local seguro para organización, roles y administrador ficticio.
+- ✅ Usuario, sesión renovable y hashing seguro de contraseñas.
+- ✅ Login, logout, refresh, cambio de contraseña y perfil autenticado.
+- ✅ Roles y permisos persistidos; Owner/Admin/Manager/Seller/Warehouse/Viewer.
+- ✅ Roles personalizados sin depender de autorización hardcodeada.
+- ✅ Guards de autenticación y permisos.
+- ✅ Aislamiento por organización y administración de usuarios.
+- ✅ Seed local seguro para organización, roles y administrador ficticio.
 - Tests de autenticación, autorización y fuga entre tenants.
 
-## ⬜ FASE 3 — Locations & Catalog
+## 🟡 FASE 3 — Locations & Catalog
 
 - Sucursales y bodegas.
 - Marcas, categorías, productos y variantes.

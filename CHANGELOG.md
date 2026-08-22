@@ -15,6 +15,12 @@ estructura inspirada en Keep a Changelog.
 - Ejemplos `.env.example`, scripts `typecheck`, `check`, `lint:fix`,
   `prisma:format` y `db:ps`.
 - Tests de configuración, health y contratos HTTP (9 unitarios y 3 e2e).
+- Migración `add_identity_access` con usuarios, sesiones, roles y permisos.
+- Bootstrap inicial, login, refresh rotativo, logout, perfil y cambio de password.
+- Guards globales de JWT/permisos y aislamiento de Organization por sesión.
+- Administración multi-tenant de usuarios y roles personalizados.
+- Seed idempotente con Owner y seis roles de sistema.
+- Cobertura ampliada a 28 unit tests y 6 e2e.
 
 ### Changed
 
@@ -29,3 +35,5 @@ estructura inspirada en Keep a Changelog.
 - Los archivos de entorno permanecen fuera del repositorio.
 - Se documentó la alerta transitiva de `deepmerge-ts` en la herramienta Prisma;
   no se aplicó el downgrade destructivo propuesto por `npm audit --force`.
+- Passwords usan scrypt con salt; refresh tokens se guardan hasheados, rotan y
+  sus sesiones pueden revocarse inmediatamente.

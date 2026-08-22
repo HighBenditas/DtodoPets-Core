@@ -1,10 +1,12 @@
 # Pruebas
 
-## Estado inicial
+## Estado actual
 
-- Tres unit tests de `OrganizationsService`.
-- Un unit test del controller raíz.
-- Un e2e del endpoint raíz con Prisma reemplazado por mock.
+- 28 unit tests en 10 suites para configuración, health, Organization, password,
+  login/sesiones, permisos, usuarios y roles.
+- 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
+- Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
+  refresh rotativo → logout.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia

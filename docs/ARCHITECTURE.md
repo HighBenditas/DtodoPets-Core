@@ -26,7 +26,9 @@ no componentes ya implementados.
 - `AppModule` compone `PrismaModule` y `OrganizationsModule`.
 - `PrismaModule` es global y expone un cliente Prisma con adapter PostgreSQL.
 - `OrganizationsModule` implementa CRUD básico contra `Organization`.
-- No existen frontend, identidad, eventos ni adaptadores todavía.
+- `AuthModule` aplica guards globales JWT/RBAC y gestiona sesiones rotativas.
+- `UsersModule` y `RolesModule` administran identidades y RBAC del tenant.
+- No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos
 
@@ -60,6 +62,14 @@ sequenceDiagram
 `organizationId` e índices/constraints compuestos cuando corresponda. El valor
 se deriva del principal autenticado. Las pruebas deben demostrar que un usuario
 no puede leer o mutar recursos de otro tenant.
+
+## Autenticación y autorización
+
+El access token JWT contiene solo IDs de usuario, organización y sesión. En cada
+request el guard verifica firma/expiración y vuelve a cargar sesión, estado del
+usuario/organización, roles y permisos desde PostgreSQL. Así logout,
+desactivación o cambios RBAC tienen efecto sin esperar al vencimiento del JWT.
+Los refresh tokens son aleatorios, se guardan hasheados y rotan atómicamente.
 
 ## Decisiones y tradeoffs
 

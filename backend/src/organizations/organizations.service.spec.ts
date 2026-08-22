@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -79,6 +83,22 @@ describe('OrganizationsService', () => {
 
     await expect(service.create({ name: 'Mi Clinica' })).rejects.toBeInstanceOf(
       ConflictException,
+    );
+  });
+
+  it('filters organization lists using the authenticated tenant', async () => {
+    prisma.organization.findMany.mockResolvedValue([]);
+    await service.findAll('org-a');
+    expect(prisma.organization.findMany).toHaveBeenCalledWith({
+      orderBy: { createdAt: 'desc' },
+      where: { id: 'org-a' },
+    });
+  });
+
+  it('does not return another tenant organization', async () => {
+    prisma.organization.findUnique.mockResolvedValue({ id: 'org-b' });
+    await expect(service.findOne('org-a', 'org-b')).rejects.toBeInstanceOf(
+      NotFoundException,
     );
   });
 });

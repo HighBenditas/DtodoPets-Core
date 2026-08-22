@@ -26,6 +26,12 @@ Sigue el quickstart de `README.md`. Trabaja desde la raíz Git
 No reescribas migraciones aplicadas. En producción se usa
 `npm run prisma:deploy`, no `migrate dev`.
 
+## Seed
+
+`npm run prisma:seed` es explícito, idempotente y está bloqueado en
+`NODE_ENV=production`. Configura los valores ficticios con variables `SEED_*`.
+No cambies contraseñas existentes al volver a ejecutar un seed.
+
 ## Agregar un endpoint
 
 1. Define el permiso y regla multi-tenant.

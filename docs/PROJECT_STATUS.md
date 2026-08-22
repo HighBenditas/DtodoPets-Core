@@ -4,23 +4,21 @@ Actualizado: 2026-08-22.
 
 ## Estado actual
 
-DTodoPets Core tiene un backend NestJS 11 funcional con Prisma 7 y un primer
-dominio `Organization`. PostgreSQL y Redis funcionan en Docker. El proyecto aún
-no tiene autenticación, autorización, aislamiento multi-tenant efectivo ni los
-dominios comerciales posteriores.
+DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP e
+Identity & Access multi-tenant. PostgreSQL y Redis funcionan en Docker. El
+siguiente dominio incompleto es Locations & Catalog; aún no existe frontend.
 
 ## Último hito completado
 
-FASE 1 — Foundation.
+FASE 2 — Identity & Organizations.
 
 ## Hito actual
 
-FASE 2 — Identity & Organizations: usuario, sesiones, roles, permisos,
-autenticación y aislamiento por organización.
+FASE 3 — Locations & Catalog.
 
 ## Próximo hito
 
-FASE 3 — Locations & Catalog.
+FASE 4 — Inventory.
 
 ## Funcionalidades terminadas
 
@@ -33,19 +31,24 @@ FASE 3 — Locations & Catalog.
 - Health check de PostgreSQL en `GET /health`.
 - Helmet, CORS configurable y correlation ID por request.
 - Ejemplos de entorno sin secretos y scripts de calidad reproducibles.
-- Compilación, typecheck, lint, 9 unit tests y 3 e2e correctos.
+- Usuarios activos/inactivos, sesiones, login, refresh rotativo, logout, perfil y
+  cambio de contraseña con revocación de otras sesiones.
+- Contraseñas hasheadas con scrypt y refresh tokens almacenados solo como SHA-256.
+- RBAC persistido, seis roles de sistema y roles personalizados por tenant.
+- Guards globales de JWT/permisos y organizaciones limitadas a la sesión.
+- Seed local idempotente para organización, roles y Owner ficticio.
+- Compilación, typecheck, lint, 28 unit tests y 6 e2e correctos.
+- Smoke test real de bootstrap, login, tenant, creación de Seller, refresh y
+  logout contra PostgreSQL.
 
 ## Funcionalidades pendientes
 
-- Identity & Access, RBAC y sesiones.
 - Sucursales/bodegas, catálogo, inventario, clientes y pedidos.
 - Pagos, logística, canales, integraciones, promociones y devoluciones.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
 ## Problemas conocidos
 
-- El CRUD actual de organizaciones no está autenticado ni aislado por tenant.
-- No hay seed; se implementará junto con roles y el administrador de desarrollo.
 - `npm audit --omit=dev` informa tres vulnerabilidades altas transitivas por
   `deepmerge-ts` dentro de la CLI Prisma. La corrección automática propone
   degradar Prisma 7 a Prisma 6 y no debe aplicarse sin una migración evaluada.
@@ -58,14 +61,20 @@ FASE 3 — Locations & Catalog.
 - Usar `Organization` como límite de tenant y derivar el tenant de la sesión.
 - No editar ni eliminar la migración aplicada.
 - Mantener el cliente Prisma generado fuera de Git y ESLint.
+- Access tokens JWT de 15 minutos y refresh tokens opacos, rotativos, hasheados y
+  respaldados por sesiones revocables.
+- Roles y permisos se resuelven desde PostgreSQL en cada request autenticada;
+  los nombres Owner/Admin/etc. solo son defaults provisionados.
 
 ## Migraciones actuales
 
 | Migración | Estado | Contenido |
 | --- | --- | --- |
 | `20260817231441_init_organization` | Aplicada | Tabla e índice único de `Organization` |
+| `20260822213602_add_identity_access` | Aplicada | Usuarios, sesiones, roles y permisos |
 
-La base contiene cero organizaciones al momento de la auditoría.
+La base local contiene datos ficticios de desarrollo creados durante el smoke
+test: una organización, dos usuarios, seis roles y diecisiete permisos.
 
 ## Comandos útiles
 
@@ -90,5 +99,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Identity & Access con una migración progresiva que agregue usuarios,
-sesiones, roles y permisos multi-tenant; proteger el dominio Organization.
+Implementar FASE 3 empezando por `Location` y `Warehouse`, seguido por `Brand`,
+`Category`, `Product` y `ProductVariant`, con constraints multi-tenant, dinero CLP,
+paginación, filtros y tests.

@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateOrganizationDto {
   @IsOptional()
@@ -18,8 +12,4 @@ export class UpdateOrganizationDto {
   @IsNotEmpty()
   @MaxLength(120)
   slug?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  active?: boolean;
 }

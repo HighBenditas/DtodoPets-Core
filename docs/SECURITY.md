@@ -11,11 +11,19 @@
 - No se almacenan datos de tarjeta, secretos o tokens en logs/auditoría.
 - Toda entrada externa se valida en runtime.
 
-## Estado inicial y riesgos
+## Controles implementados
 
-- El CRUD de organizaciones está actualmente abierto; se corregirá en Identity.
-- Aún no hay rate limiting, headers seguros, CORS restringido ni filtro de error.
-- Los `.env` están ignorados por Git; faltan ejemplos sin secretos.
+- Guards globales JWT y permisos con sesión/tenant consultados en PostgreSQL.
+- Scrypt con salt para contraseñas; refresh tokens opacos almacenados como hash.
+- Rotación atómica y revocación inmediata de sesiones.
+- ValidationPipe whitelist, filtro de error seguro, Helmet, CORS configurable y
+  correlation IDs.
+- Los `.env` están ignorados y existen ejemplos sin secretos.
+
+## Riesgos pendientes
+
+- Rate limiting específico de auth y recuperación de contraseña se abordarán en
+  hardening; no hay endpoint de recuperación expuesto actualmente.
 - La CLI Prisma incluye una dependencia transitiva `deepmerge-ts` reportada por
   npm con severidad alta. `npm audit fix --force` propone un downgrade mayor y
   no se aplicará. Se vigilará una versión Prisma corregida compatible.

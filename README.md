@@ -70,6 +70,19 @@ Durante el desarrollo de un nuevo cambio de esquema se utiliza
 `npx prisma migrate dev --name <nombre_descriptivo>`. Nunca uses
 `prisma migrate reset` sobre una base con datos útiles.
 
+## Seed de desarrollo
+
+```bash
+cd backend
+npm run prisma:seed
+```
+
+El seed es idempotente y crea la organización, permisos, seis roles de sistema y
+el Owner local cuando no existe. Los valores predeterminados son
+`admin@dtodopets.local` / `Change-this-development-password-123!`; son
+credenciales exclusivamente locales y deben sobrescribirse mediante las
+variables `SEED_*` descritas en `backend/.env.example`.
+
 ## Ejecutar el backend
 
 ```bash

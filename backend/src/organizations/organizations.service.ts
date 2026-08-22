@@ -31,29 +31,35 @@ export class OrganizationsService {
     }
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.organization.findMany({
+      where: { id: organizationId },
       orderBy: {
         createdAt: 'desc',
       },
     });
   }
 
-  async findOne(id: string) {
+  async findOne(organizationId: string, id: string) {
     const organization = await this.prisma.organization.findUnique({
       where: {
         id,
       },
     });
 
-    if (!organization) {
+    if (!organization || organization.id !== organizationId) {
       throw new NotFoundException('Organization not found');
     }
 
     return organization;
   }
 
-  async update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
+  async update(
+    organizationId: string,
+    id: string,
+    updateOrganizationDto: UpdateOrganizationDto,
+  ) {
+    await this.findOne(organizationId, id);
     const data = buildUpdateData(updateOrganizationDto);
 
     if (Object.keys(data).length === 0) {
@@ -73,19 +79,6 @@ export class OrganizationsService {
       throw error;
     }
   }
-
-  async remove(id: string) {
-    try {
-      return await this.prisma.organization.delete({
-        where: {
-          id,
-        },
-      });
-    } catch (error) {
-      throwPrismaNotFound(error);
-      throw error;
-    }
-  }
 }
 
 function buildUpdateData(
@@ -99,14 +92,6 @@ function buildUpdateData(
 
   if (updateOrganizationDto.slug !== undefined) {
     data.slug = normalizeSlug(updateOrganizationDto.slug);
-  }
-
-  if (updateOrganizationDto.active !== undefined) {
-    if (typeof updateOrganizationDto.active !== 'boolean') {
-      throw new BadRequestException('active must be a boolean');
-    }
-
-    data.active = updateOrganizationDto.active;
   }
 
   return data;
