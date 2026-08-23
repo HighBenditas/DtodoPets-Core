@@ -1,6 +1,7 @@
 import { Prisma } from '../generated/prisma/client';
 
 export const PERMISSIONS = {
+  auditRead: 'audit.read',
   customersCreate: 'customers.create',
   customersRead: 'customers.read',
   customersUpdate: 'customers.update',

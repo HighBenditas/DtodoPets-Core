@@ -85,9 +85,10 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 
 ## 🟡 FASE 12 — Analytics & Audit
 
-- 🟡 Base persistente de `AuditLog` aplicada con tenant/actor, ciclo de vida,
-  índices y trigger que impide borrado o reescritura de identidad. La captura
-  HTTP y el endpoint de consulta aún no están implementados.
+- ✅ Base persistente de `AuditLog` aplicada con tenant/actor, ciclo de vida,
+  índices y trigger que impide borrado o reescritura de identidad.
+- ✅ Captura de mutaciones autenticadas sin body/PII/secrets y consulta
+  tenant-safe mediante `audit.read`, filtros y paginación.
 - ⬜ KPIs reales, reportes paginados y consultas/indexación medidas.
 
 ## ⬜ FASE 13 — Admin Web

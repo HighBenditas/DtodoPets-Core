@@ -9,7 +9,8 @@ Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
 pagos, devoluciones, logística, canales e integraciones multi-tenant. PostgreSQL
 y Redis funcionan en Docker. Mercado Libre ya mapea/importa y el storefront
 público ofrece catálogo, promociones, carrito y checkout idempotente sin
-frontend. El siguiente dominio es Analytics & Audit.
+frontend. Analytics & Audit continúa activo: la auditoría administrativa ya es
+operativa y todavía faltan los KPIs y reportes.
 
 ## Último hito completado
 
@@ -121,29 +122,38 @@ FASE 13 — Admin Web.
   outbox en la misma transacción; el replay igual no duplica y uno distinto da 409.
 - 110 unit tests en 28 suites y 6 e2e correctos; smoke HTTP real aprobó catálogo
   sanitizado, descuento exacto de 1.499 CLP, una reserva y replay idempotente.
-- Inicio parcial de Fase 12: `AuditLog` ya existe por tenant/actor con outcome,
-  método, acción, ruta, recurso, correlation ID, IP, estado HTTP y duración. Sus
-  constraints exigen un ciclo coherente y el trigger solo permite finalizar una
-  entrada intentada; UPDATE posterior y DELETE quedan bloqueados.
+- `AuditModule` registra cada mutación autenticada como `ATTEMPTED` antes de
+  ejecutar el handler y la finaliza una vez como `SUCCEEDED` o `FAILED`, sin
+  persistir body, query, mensajes de error, PII ni secretos.
+- `GET /api/v1/audit-logs` exige `audit.read`, deriva el tenant de la sesión y
+  ofrece paginación y filtros por actor, outcome, método, recurso, correlation ID,
+  rango temporal y búsqueda.
+- 120 unit tests en 30 suites y 6 e2e correctos; smoke HTTP/PostgreSQL de Audit
+  aprobó éxito/fallo, 401, permiso provisionado, ausencia del secreto enviado y
+  rechazo de UPDATE/DELETE por el trigger append-only.
 
 ## Funcionalidades pendientes
 
-- Captura/API del audit log, KPIs/reportes e indexación medida.
+- KPIs reales, reportes paginados e indexación medida de sus consultas.
 - Workers de outbox, frontend y hardening de producción.
 
-## Trabajo parcial de Fase 12
+## Estado parcial de Fase 12
 
-- Aplicado: modelo/migración `AuditLog`, enum `AuditOutcome`, FKs compuestas,
-  índices por tenant/fecha/actor/outcome/recurso/correlation y trigger protector.
-- No implementado: servicio/controlador de auditoría, captura de mutaciones,
-  permiso `audit.read`, tests específicos, KPIs ni endpoints de reportes.
-- No existe código que escriba `AuditLog` todavía; la tabla local está vacía.
+- Implementado: modelo/migración, trigger protector, `AuditModule`, interceptor
+  global para mutaciones autenticadas, permiso `audit.read`, endpoint tenant-safe,
+  filtros/paginación, pruebas unitarias y smoke real.
+- Pendiente: overview/KPIs, reporte diario paginado y medición de sus consultas.
+- Alcance conocido: los rechazos 401/403 ocurren antes del interceptor y no generan
+  `AuditLog`; si una finalización falla, la mutación exitosa conserva su respuesta
+  y el registro durable queda `ATTEMPTED` para diagnóstico/reconciliación.
 
 ## Problemas conocidos
 
 - `npm audit --omit=dev` informa tres vulnerabilidades altas transitivas por
   `deepmerge-ts` dentro de la CLI Prisma. La corrección automática propone
   degradar Prisma 7 a Prisma 6 y no debe aplicarse sin una migración evaluada.
+- La auditoría no captura rechazos de guards 401/403 y aún no existe un proceso
+  automático para reconciliar intentos cuya finalización falle.
 - No hay frontend ni pipeline CI.
 
 ## Decisiones tomadas
@@ -177,6 +187,9 @@ FASE 13 — Admin Web.
   al carrito y su huella incluye payload normalizado más versión.
 - Promociones se calculan en enteros CLP y solo se conserva la mejor automática;
   cupones se eligen explícitamente y una redención congela sus datos comerciales.
+- Las mutaciones autenticadas escriben primero un intento de auditoría; si esa
+  escritura falla, el handler no se ejecuta. La finalización nunca almacena el
+  body/query/error y un fallo posterior no reemplaza la respuesta de negocio.
 
 ## Migraciones actuales
 
@@ -201,7 +214,7 @@ FASE 13 — Admin Web.
 | `20260823005000_add_analytics_audit` | Aplicada | Base persistente e inmutable de auditoría administrativa |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
-tests: una organización, dos usuarios, seis roles, treinta y tres permisos, una
+tests: una organización, dos usuarios, seis roles, treinta y cuatro permisos, una
 sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
 imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
 También contiene un cliente ficticio con dos direcciones y dos pedidos del
@@ -219,6 +232,9 @@ datos ni reservas existentes.
 El smoke de Storefront agregó un canal propio, un cupón, un carrito finalizado,
 una redención, un pedido `PENDING`, una reserva y el evento de checkout; el replay
 no creó una segunda orden ni incrementó otra vez el reservado.
+El seed de este checkpoint elevó el catálogo RBAC a treinta y cuatro permisos y
+el smoke de Audit agregó dos registros terminales: uno exitoso y uno fallido; el
+valor sensible usado para probar validación no se persistió.
 
 ## Comandos útiles
 
@@ -243,8 +259,8 @@ documentos.
 
 ## NEXT ACTION
 
-Continuar exactamente en Fase 12 desde la tabla `AuditLog` ya migrada: implementar
-`AuditModule` con captura de mutaciones autenticadas sin guardar body/PII/secrets,
-añadir `audit.read` y `GET /api/v1/audit-logs` tenant-safe con filtros/paginación,
-crear sus pruebas y solo después iniciar overview/KPIs/reportes diarios. No crear
-otra migración para `AuditLog` salvo que las pruebas revelen una corrección real.
+Retomar exactamente en Fase 12 después del checkpoint de auditoría: diseñar e
+implementar `ReportsModule` con un overview de KPIs reales y un reporte diario
+paginado, siempre tenant-safe mediante `reports.read`, rangos temporales acotados,
+importes CLP exactos y pruebas de aislamiento/consultas. Medir las consultas e
+incorporar índices solo si la evidencia lo exige. No iniciar Fase 13 todavía.

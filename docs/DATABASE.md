@@ -608,7 +608,7 @@ cliente y orden del mismo tenant y congela nombre, código, tipo, valor, moneda 
 descuento. Pedido, reserva, redención y cierre se confirman en una transacción;
 la base evita que dos carreras creen dos órdenes para un carrito.
 
-## Audit (checkpoint parcial)
+## Audit
 
 `AuditLog` ya persiste tenant, actor, sesión, outcome, método, acción/ruta,
 recurso, correlation ID, IP directa y resultado temporal/HTTP sin columna para
@@ -616,9 +616,11 @@ body o secretos. El ciclo parte en `ATTEMPTED` y puede finalizar una sola vez en
 `SUCCEEDED` o `FAILED`; constraints validan los campos de cada estado y un
 trigger bloquea DELETE, cambios de identidad y nuevas modificaciones terminales.
 
-La tabla e índices están aplicados, pero este checkpoint no incorpora todavía
-servicio, interceptor/captura ni endpoint de lectura. Por tanto la tabla local
-permanece vacía hasta continuar la Fase 12.
+La tabla e índices están aplicados. `AuditModule` escribe el intento antes de una
+mutación autenticada y lo finaliza al resolver o fallar el handler. La consulta
+administrativa deriva el tenant de la sesión y no existe columna ni escritura
+para payload, query o mensaje de error. Los KPIs/reportes de Fase 12 siguen
+pendientes y no requieren modificar esta tabla salvo evidencia nueva.
 
 ## Estrategia prevista
 

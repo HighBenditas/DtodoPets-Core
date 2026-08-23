@@ -45,6 +45,10 @@
   checkout tampoco se expone.
 - Checkout valida DTOs anidados, normaliza PII, revalida stock/precios y usa
   unicidad/locks para no duplicar pedido, reserva ni redención bajo reintentos.
+- La auditoría crea un intento antes de cada mutación autenticada y deriva
+  tenant, actor y sesión del principal. Solo persiste ruta/acción/resultado e IDs
+  operativos; no almacena body, query ni mensajes de excepción. `audit.read`
+  protege la consulta y PostgreSQL impide borrar o reescribir entradas terminales.
 
 ## Riesgos pendientes
 
@@ -64,6 +68,9 @@
 - Antes de publicar el storefront se requiere rate limiting/WAF para creación y
   mutación de carritos, política antiabuso del checkout y controles operativos de
   retención de carritos/PII guest.
+- Los rechazos de autenticación/autorización ocurren antes del interceptor de
+  auditoría. También falta automatizar la reconciliación de intentos que queden
+  abiertos si falla su escritura terminal.
 
 ## Reporte y revisión
 

@@ -52,6 +52,8 @@ no componentes ya implementados.
 - `StorefrontModule` es el boundary HTTP público: selecciona únicamente datos
   publicables, protege carritos con token opaco y delega creación/reserva del
   pedido a `OrdersService` mediante hooks dentro de la misma transacción.
+- `AuditModule` aplica un interceptor global a mutaciones autenticadas, persiste
+  el intento antes del handler y expone una lectura paginada protegida por tenant.
 - No existen frontend ni workers de publicación/reintento todavía.
 
 ## Límites previstos

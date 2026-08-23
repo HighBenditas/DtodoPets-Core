@@ -84,6 +84,12 @@ estructura inspirada en Keep a Changelog.
   outcome intentado/exitoso/fallido, relaciones tenant/actor, índices de consulta,
   constraints de ciclo de vida y trigger protector. Captura/API/reportes quedan
   explícitamente pendientes.
+- `AuditModule` con captura global de mutaciones autenticadas, ciclo durable
+  `ATTEMPTED → SUCCEEDED/FAILED` y finalización tenant-safe sin payloads.
+- Permiso `audit.read` y `GET /api/v1/audit-logs` con actor seguro, paginación y
+  filtros por outcome, método, recurso, correlation ID, fecha y búsqueda.
+- Cobertura ampliada a 120 tests en 30 suites, manteniendo 6 e2e, y smoke real de
+  éxito/fallo, autorización, sanitización y protección PostgreSQL UPDATE/DELETE.
 
 ### Changed
 
@@ -116,3 +122,6 @@ estructura inspirada en Keep a Changelog.
   escribir datos; responde HTTP 200 rápido.
 - Los tokens de carrito se generan aleatoriamente, se entregan una sola vez y
   PostgreSQL conserva únicamente su hash SHA-256.
+- La auditoría administrativa nunca persiste body, query, mensajes de error ni
+  secretos; el tenant/actor se derivan de la sesión y la lectura exige
+  `audit.read`.

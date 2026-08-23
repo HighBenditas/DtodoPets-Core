@@ -322,6 +322,19 @@ devuelve `idempotent: true` y la misma orden sin otra reserva; modificar datos d
 409. El carrito finalizado muestra importes/items desde los snapshots de la
 orden y la promoción desde su redención, no desde precios vigentes posteriores.
 
+## Auditoría administrativa
+
+`GET /api/v1/audit-logs` exige `audit.read` y solo devuelve registros del tenant
+autenticado. Acepta `page`, `limit`, `actorUserId`, `outcome`, `method`,
+`resourceType`, `resourceId`, `correlationId`, `from`, `to` y `search`; el límite
+superior temporal es exclusivo. La respuesta incluye un actor seleccionado de
+forma explícita y metadatos de paginación, pero nunca body, query, secretos ni
+mensajes de error.
+
+Las mutaciones autenticadas `POST`/`PUT`/`PATCH`/`DELETE` crean un intento antes
+del handler y lo finalizan con outcome, estado HTTP, duración y recurso cuando se
+puede derivar. Rutas públicas y lecturas GET no se registran en esta fase.
+
 ## Planificados
 
 `/api/v1/reports` se documentará aquí solo cuando exista.
