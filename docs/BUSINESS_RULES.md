@@ -134,6 +134,18 @@ roadmap.
 - Crear shipment es idempotente por clave/huella y se serializa bajo lock del
   pedido junto con asignación de items y cobro.
 
+### Canales e integraciones
+
+- Claves de canal/integración son estables, normalizadas y únicas por tenant.
+- Configuración no secreta se separa de credenciales cifradas AES-256-GCM; las
+  respuestas solo indican si existen credenciales.
+- Una referencia externa mapea una entidad local y un ID externo una sola vez
+  por integración/tipo; repetir el mismo mapping es idempotente.
+- Un evento webhook se identifica por integración/ID externo y huella del
+  payload. Mismo payload se reproduce; uno distinto responde 409.
+- Cada mutación relevante escribe un `DomainEvent` pendiente en la misma
+  transacción para que adaptadores posteriores procesen una outbox durable.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

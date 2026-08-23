@@ -39,6 +39,11 @@ model Organization {
   shipments             Shipment[]
   shipmentItems         ShipmentItem[]
   shipmentStatusHistory ShipmentStatusHistory[]
+  salesChannels         SalesChannel[]
+  integrations          Integration[]
+  externalReferences    ExternalReference[]
+  webhookReceipts       WebhookReceipt[]
+  domainEvents          DomainEvent[]
 }
 
 model Brand {
@@ -365,6 +370,9 @@ model User {
   createdOrderReturns           OrderReturn[]           @relation("OrderReturnCreator")
   createdShipments              Shipment[]              @relation("ShipmentCreator")
   shipmentStatusChanges         ShipmentStatusHistory[] @relation("ShipmentStatusActor")
+  createdSalesChannels          SalesChannel[]          @relation("SalesChannelCreator")
+  createdIntegrations           Integration[]           @relation("IntegrationCreator")
+  createdExternalReferences     ExternalReference[]     @relation("ExternalReferenceCreator")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId])
@@ -733,4 +741,154 @@ model ShipmentStatusHistory {
 
   @@index([organizationId, createdAt])
   @@index([shipmentId, createdAt])
+}
+
+enum SalesChannelType {
+  OWN_STOREFRONT
+  MARKETPLACE
+  SOCIAL_COMMERCE
+  MESSAGING
+  MANUAL
+  OTHER
+}
+
+enum ExternalEntityType {
+  ORDER
+  PRODUCT
+  VARIANT
+  CUSTOMER
+  SHIPMENT
+}
+
+enum WebhookReceiptStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+}
+
+enum DomainEventStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+model SalesChannel {
+  id              String           @id @default(uuid())
+  organizationId  String
+  key             String
+  name            String
+  type            SalesChannelType
+  active          Boolean          @default(true)
+  metadata        Json?
+  createdByUserId String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdBy    User          @relation("SalesChannelCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  integrations Integration[]
+
+  @@unique([organizationId, key])
+  @@unique([id, organizationId])
+  @@index([organizationId, active, name])
+}
+
+model Integration {
+  id                    String   @id @default(uuid())
+  organizationId        String
+  salesChannelId        String?
+  key                   String
+  name                  String
+  provider              String
+  active                Boolean  @default(true)
+  config                Json?
+  credentialsCiphertext String?
+  credentialKeyVersion  Int      @default(1)
+  createdByUserId       String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  salesChannel       SalesChannel?       @relation(fields: [salesChannelId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy          User                @relation("IntegrationCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  externalReferences ExternalReference[]
+  webhookReceipts    WebhookReceipt[]
+  domainEvents       DomainEvent[]
+
+  @@unique([organizationId, key])
+  @@unique([id, organizationId])
+  @@index([organizationId, active, provider])
+  @@index([salesChannelId])
+}
+
+model ExternalReference {
+  id              String             @id @default(uuid())
+  organizationId  String
+  integrationId   String
+  entityType      ExternalEntityType
+  entityId        String
+  externalId      String
+  metadata        Json?
+  createdByUserId String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  integration  Integration  @relation(fields: [integrationId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  createdBy    User         @relation("ExternalReferenceCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([integrationId, entityType, entityId])
+  @@unique([integrationId, entityType, externalId])
+  @@unique([id, organizationId])
+  @@index([organizationId, entityType, entityId])
+  @@index([organizationId, externalId])
+}
+
+model WebhookReceipt {
+  id              String               @id @default(uuid())
+  organizationId  String
+  integrationId   String
+  externalEventId String
+  eventType       String
+  payload         Json
+  payloadHash     String
+  status          WebhookReceiptStatus @default(RECEIVED)
+  attempts        Int                  @default(0)
+  lastError       String?
+  receivedAt      DateTime             @default(now())
+  processedAt     DateTime?
+  updatedAt       DateTime             @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  integration  Integration  @relation(fields: [integrationId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([integrationId, externalEventId])
+  @@unique([id, organizationId])
+  @@index([organizationId, status, receivedAt])
+  @@index([integrationId, eventType, receivedAt])
+}
+
+model DomainEvent {
+  id             String            @id @default(uuid())
+  organizationId String
+  integrationId  String?
+  aggregateType  String
+  aggregateId    String
+  type           String
+  payload        Json
+  status         DomainEventStatus @default(PENDING)
+  attempts       Int               @default(0)
+  availableAt    DateTime          @default(now())
+  publishedAt    DateTime?
+  lastError      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  integration  Integration? @relation(fields: [integrationId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([id, organizationId])
+  @@index([organizationId, status, availableAt])
+  @@index([aggregateType, aggregateId, createdAt])
+  @@index([integrationId, createdAt])
 }

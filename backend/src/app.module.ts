@@ -6,6 +6,7 @@ import { CatalogModule } from './catalog/catalog.module';
 import { CustomersModule } from './customers/customers.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { LocationsModule } from './locations/locations.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { OrdersModule } from './orders/orders.module';
@@ -25,6 +26,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     CustomersModule,
     HealthModule,
     InventoryModule,
+    IntegrationsModule,
     LocationsModule,
     OrganizationsModule,
     OrdersModule,

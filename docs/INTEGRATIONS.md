@@ -1,17 +1,19 @@
 # Integraciones
 
-No hay integraciones externas implementadas todavía.
+Existe la base multi-tenant para canales y adaptadores; todavía no hay un
+proveedor externo concreto conectado.
 
 ## Diseño objetivo
 
 - Los dominios dependen de puertos internos, no de SDKs de marketplaces.
-- `SalesChannel`, `Integration` y `ExternalReference` separarán referencias
-  externas del pedido/producto interno.
-- Cada entrada de webhook conservará proveedor, identificador idempotente,
-  estado, timestamps y error seguro.
-- Credenciales se cifrarán o residirán en un gestor de secretos; nunca en Git.
-- Eventos como `order.created`, `order.paid` o `inventory.low_stock` comenzarán
-  dentro del monolito y podrán publicarse a infraestructura externa después.
+- `SalesChannel`, `Integration` y `ExternalReference` ya separan referencias
+  externas de pedidos, productos, variantes, clientes y shipments internos.
+- `WebhookReceipt` conserva integración, identificador idempotente, payload,
+  huella SHA-256, estado, intentos, timestamps y error seguro.
+- Credenciales se cifran con AES-256-GCM usando `INTEGRATION_ENCRYPTION_KEY`;
+  ciphertext y secretos nunca salen por API ni se guardan en Git.
+- `DomainEvent` implementa una outbox transaccional pendiente de workers/adaptadores
+  específicos para publicación, reintento y observabilidad.
 
 ## Mercado Libre
 

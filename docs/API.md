@@ -83,6 +83,16 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | GET | `/api/v1/shipments/:id` | Bearer + `shipments.read` | Obtiene items e historial logístico |
 | POST | `/api/v1/shipments` | Bearer + `shipments.create` | Crea shipment parcial idempotente |
 | POST | `/api/v1/shipments/:id/transitions` | Bearer + `shipments.update` | Cambia estado y datos logísticos |
+| GET | `/api/v1/sales-channels` | Bearer + `integrations.manage` | Lista canales paginados |
+| POST | `/api/v1/sales-channels` | Bearer + `integrations.manage` | Crea canal y evento outbox |
+| PATCH | `/api/v1/sales-channels/:id` | Bearer + `integrations.manage` | Actualiza canal |
+| GET | `/api/v1/integrations` | Bearer + `integrations.manage` | Lista integraciones sin secretos |
+| GET | `/api/v1/integrations/:id` | Bearer + `integrations.manage` | Detalle, referencias y webhooks |
+| POST | `/api/v1/integrations` | Bearer + `integrations.manage` | Crea integración y cifra credenciales |
+| PATCH | `/api/v1/integrations/:id` | Bearer + `integrations.manage` | Actualiza configuración/credenciales |
+| POST | `/api/v1/integrations/:id/external-references` | Bearer + `integrations.manage` | Mapea entidad externa idempotentemente |
+| POST | `/api/v1/integrations/:id/webhook-receipts` | Bearer + `integrations.manage` | Registra webhook deduplicado |
+| GET | `/api/v1/integrations/events` | Bearer + `integrations.manage` | Lee últimos eventos outbox |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -233,5 +243,4 @@ marketplace requieren tracking al despacharse y toda entrega requiere costo real
 
 ## Planificados
 
-`/api/v1/channels`,
-`/integrations` y `/reports` se documentarán aquí solo cuando existan.
+`/api/v1/reports` se documentará aquí solo cuando exista.

@@ -64,13 +64,13 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Shipments desacoplados, métodos, tracking y costos reales/subsidios.
 - ✅ Retiro, despacho propio, marketplace y courier externo.
 
-## 🟡 FASE 9 — Sales Channels & Integrations
+## ✅ FASE 9 — Sales Channels & Integrations
 
-- SalesChannel, Integration y ExternalReference.
-- Credenciales protegidas, webhooks e idempotencia reutilizable.
-- Eventos de dominio internos y adaptadores de integración.
+- ✅ SalesChannel, Integration y ExternalReference.
+- ✅ Credenciales protegidas, webhooks e idempotencia reutilizable.
+- ✅ Eventos internos mediante outbox transaccional y base para adaptadores.
 
-## ⬜ FASE 10 — Mercado Libre
+## 🟡 FASE 10 — Mercado Libre
 
 - Mapping de productos, importación idempotente de pedidos, stock y costos.
 - Verificación de webhooks y procesamiento reintentable.

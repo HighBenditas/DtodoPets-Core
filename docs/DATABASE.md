@@ -3,8 +3,9 @@
 ## Estado real
 
 PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
-Customers, Orders, Payments, Returns y Logistics. Hay once migraciones
-aplicadas; la última es `20260822234617_add_logistics`.
+Customers, Orders, Payments, Returns, Logistics e Integrations. Hay doce
+migraciones aplicadas; la última es
+`20260823000202_add_sales_channels_integrations`.
 
 ```mermaid
 erDiagram
@@ -426,11 +427,22 @@ Aplica el mismo lock al cobro logístico: su suma activa no supera lo cobrado en
 el pedido. `ShipmentStatusHistory` guarda estado, motivo, actor y snapshots de
 tracking/costo real en cada transición.
 
+## Canales e integraciones
+
+`SalesChannel` define el origen comercial; `Integration` separa configuración
+JSON pública de `credentialsCiphertext` AES-256-GCM. Ambas claves son únicas por
+tenant y las FKs compuestas impiden asociaciones cruzadas.
+
+`ExternalReference` garantiza mappings bidireccionales únicos por integración y
+tipo. `WebhookReceipt` conserva payload, huella SHA-256, estado e intentos con
+unicidad por evento externo. `DomainEvent` es la outbox durable con estado,
+intentos, disponibilidad y publicación; se inserta junto con la mutación.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Integraciones: constraints de idempotencia por canal/proveedor y referencia.
+- Adaptadores específicos reutilizarán referencias, recibos y outbox existentes.
 
 Las secciones previstas no representan tablas implementadas todavía. Cada hito
 actualizará este documento junto con `schema.prisma`.

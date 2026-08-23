@@ -43,6 +43,8 @@ no componentes ya implementados.
   forma opcional mediante el ledger de inventario.
 - `ShipmentsModule` separa fulfillment del pedido, asigna items/cobro bajo lock
   y conserva costos reales, tracking e historial de estados.
+- `IntegrationsModule` mantiene canales, secretos cifrados, referencias externas,
+  deduplicación de webhooks y una outbox transaccional.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos

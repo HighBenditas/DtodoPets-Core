@@ -60,6 +60,10 @@ estructura inspirada en Keep a Changelog.
   de cantidades/cobro, cancelación liberadora y cálculo de subsidio/margen.
 - Cobertura ampliada a 87 unit tests en 23 suites y smoke HTTP real de courier,
   despacho propio, retiro, tracking y cuatro shipments fraccionados.
+- Migración `add_sales_channels_integrations` con canales, integraciones,
+  referencias externas, recibos webhook y outbox transaccional.
+- Credenciales AES-256-GCM ligadas al tenant/integración, API sin exposición de
+  ciphertext, webhooks/referencias idempotentes y 89 tests en 24 suites.
 
 ### Changed
 

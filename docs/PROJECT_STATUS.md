@@ -6,21 +6,21 @@ Actualizado: 2026-08-22.
 
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
 Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
-pagos, devoluciones y logística multi-tenant. PostgreSQL y Redis funcionan en
-Docker. El siguiente dominio incompleto es Sales Channels & Integrations; aún
-no existe frontend.
+pagos, devoluciones, logística, canales e integraciones multi-tenant. PostgreSQL
+y Redis funcionan en Docker. El siguiente dominio es Mercado Libre; aún no
+existe frontend.
 
 ## Último hito completado
 
-FASE 8 — Logistics.
+FASE 9 — Sales Channels & Integrations.
 
 ## Hito actual
 
-FASE 9 — Sales Channels & Integrations.
+FASE 10 — Mercado Libre.
 
 ## Próximo hito
 
-FASE 10 — Mercado Libre.
+FASE 11 — Storefront & Promotions.
 
 ## Funcionalidades terminadas
 
@@ -95,10 +95,13 @@ FASE 10 — Mercado Libre.
   sobreasignación concurrente e idempotencia protege la creación.
 - 87 unit tests en 23 suites y 6 e2e correctos; smoke HTTP real aprobó cuatro
   shipments, tracking/costo obligatorios, subsidio/margen y cancelación.
+- Canales e integraciones con credenciales AES-256-GCM, referencias externas,
+  webhooks idempotentes por huella SHA-256 y outbox transaccional.
+- 89 unit tests en 24 suites; smoke real confirmó secretos no expuestos,
+  replays seguros, conflicto 409 y cuatro eventos internos.
 
 ## Funcionalidades pendientes
 
-- Canales de venta, integraciones, referencias externas y eventos internos.
 - Mercado Libre, promociones y storefront.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
@@ -128,6 +131,8 @@ FASE 10 — Mercado Libre.
   pedido y usan claves idempotentes con una huella del payload normalizado.
 - Shipments asignan cantidades y cobro del pedido bajo lock; costo real y cobro
   al cliente permanecen separados para medir subsidio/margen.
+- Credenciales de integración se cifran con AES-256-GCM y contexto tenant/key;
+  referencias, recibos webhook y outbox se persisten antes de adaptar proveedores.
 
 ## Migraciones actuales
 
@@ -144,6 +149,7 @@ FASE 10 — Mercado Libre.
 | `20260822234000_extend_inventory_for_returns` | Aplicada | Movimiento `RETURN` para reintegros trazables |
 | `20260822234100_add_payments_returns` | Aplicada | Pagos, reembolsos, devoluciones, idempotencia y constraints CLP |
 | `20260822234617_add_logistics` | Aplicada | Shipments, items, costos, tracking, estados e historial |
+| `20260823000202_add_sales_channels_integrations` | Aplicada | Canales, secretos cifrados, referencias, webhooks y outbox |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, treinta y un permisos, una
@@ -153,6 +159,8 @@ También contiene un cliente ficticio con dos direcciones y dos pedidos del
 smoke de Orders: uno confirmado y otro cancelado. El confirmado tiene dos pagos,
 dos reembolsos y dos devoluciones ficticias; solo una reintegró stock. Otro
 pedido confirmado contiene cuatro shipments Logistics (uno cancelado).
+El smoke de integraciones agregó un canal, una integración, una referencia, un
+recibo webhook y cuatro eventos outbox ficticios.
 
 ## Comandos útiles
 
@@ -177,7 +185,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Sales Channels & Integrations con `SalesChannel`, configuración de
-integración y `ExternalReference`; proteger credenciales, normalizar
-idempotencia/webhooks y publicar eventos internos reintentables sin acoplar el
-core a proveedores concretos.
+Implementar Mercado Libre sobre las abstracciones de integración: mapping de
+productos, importación idempotente de pedidos, verificación de webhooks y
+sincronización trazable de stock/costos.
