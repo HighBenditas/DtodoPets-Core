@@ -83,18 +83,19 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Catálogo/disponibilidad, carrito con token opaco y checkout idempotente.
 - ✅ Promociones automáticas/cupones con alcance, vigencia y redención auditable.
 
-## 🟡 FASE 12 — Analytics & Audit
+## ✅ FASE 12 — Analytics & Audit
 
 - ✅ Base persistente de `AuditLog` aplicada con tenant/actor, ciclo de vida,
   índices y trigger que impide borrado o reescritura de identidad.
 - ✅ Captura de mutaciones autenticadas sin body/PII/secrets y consulta
   tenant-safe mediante `audit.read`, filtros y paginación.
-- ⬜ KPIs reales, reportes paginados y consultas/indexación medidas.
+- ✅ Overview con KPIs reales, flujo de pagos y reporte diario paginado en CLP;
+  consultas medidas sin evidencia para una migración adicional.
 
-## ⬜ FASE 13 — Admin Web
+## 🟡 FASE 13 — Admin Web
 
-- Panel responsive conectado a la API real.
-- Pedidos, catálogo, inventario, clientes, usuarios, canales y reportes.
+- 🟡 Panel responsive conectado a la API real.
+- ⬜ Pedidos, catálogo, inventario, clientes, usuarios, canales y reportes.
 
 ## ⬜ FASE 14 — Automations & AI
 

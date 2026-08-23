@@ -619,8 +619,20 @@ trigger bloquea DELETE, cambios de identidad y nuevas modificaciones terminales.
 La tabla e índices están aplicados. `AuditModule` escribe el intento antes de una
 mutación autenticada y lo finaliza al resolver o fallar el handler. La consulta
 administrativa deriva el tenant de la sesión y no existe columna ni escritura
-para payload, query o mensaje de error. Los KPIs/reportes de Fase 12 siguen
-pendientes y no requieren modificar esta tabla salvo evidencia nueva.
+para payload, query o mensaje de error.
+
+## Reporting
+
+`ReportsModule` no crea tablas: proyecta ventas realizadas desde `Order`, flujo de
+caja desde `Payment`/`PaymentRefund` y KPIs operativos desde entidades existentes.
+Todos los predicados incluyen `organizationId`; fechas son UTC con inicio inclusivo,
+fin exclusivo y máximo 366 días. El reporte diario usa SQL parametrizado y agrupa
+`Order.createdAt::date` para estados `CONFIRMED`/`COMPLETED`.
+
+El plan local medido sobre seis pedidos eligió un scan secuencial óptimo y tardó
+0,115 ms. Existe `Order_organizationId_status_createdAt_idx`; el volumen actual no
+justifica otra migración. Debe repetirse el benchmark con cardinalidad productiva
+antes de añadir un índice parcial/cubriente.
 
 ## Estrategia prevista
 

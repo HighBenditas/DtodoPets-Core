@@ -9,20 +9,20 @@ Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
 pagos, devoluciones, logística, canales e integraciones multi-tenant. PostgreSQL
 y Redis funcionan en Docker. Mercado Libre ya mapea/importa y el storefront
 público ofrece catálogo, promociones, carrito y checkout idempotente sin
-frontend. Analytics & Audit continúa activo: la auditoría administrativa ya es
-operativa y todavía faltan los KPIs y reportes.
+frontend. Analytics & Audit ya ofrece auditoría administrativa, overview de KPIs
+y ventas diarias paginadas. El hito activo pasa a ser Admin Web.
 
 ## Último hito completado
 
-FASE 11 — Storefront & Promotions.
+FASE 12 — Analytics & Audit.
 
 ## Hito actual
 
-FASE 12 — Analytics & Audit.
+FASE 13 — Admin Web.
 
 ## Próximo hito
 
-FASE 13 — Admin Web.
+FASE 14 — Automations & AI.
 
 ## Funcionalidades terminadas
 
@@ -131,18 +131,28 @@ FASE 13 — Admin Web.
 - 120 unit tests en 30 suites y 6 e2e correctos; smoke HTTP/PostgreSQL de Audit
   aprobó éxito/fallo, 401, permiso provisionado, ausencia del secreto enviado y
   rechazo de UPDATE/DELETE por el trigger append-only.
+- `ReportsModule` expone `GET /api/v1/reports/overview` con ventas realizadas,
+  estados de órdenes/carritos, clientes, inventario, promociones y flujo exacto
+  de pagos/reembolsos para un rango UTC tenant-safe.
+- `GET /api/v1/reports/daily-sales` agrupa pedidos `CONFIRMED`/`COMPLETED` por día
+  UTC, pagina solo días con ventas y devuelve subtotal, descuento, envío, total y
+  ticket promedio como strings CLP, con `from` inclusivo y `to` exclusivo.
+- 123 unit tests en 31 suites y 6 e2e correctos; smoke HTTP real confirmó 401,
+  rango máximo, permiso, paginación y consistencia de 2 ventas/75.650 CLP. El
+  `EXPLAIN (ANALYZE, BUFFERS)` local tardó 0,115 ms sobre 6 pedidos y no justificó
+  otro índice ni migración.
 
 ## Funcionalidades pendientes
 
-- KPIs reales, reportes paginados e indexación medida de sus consultas.
-- Workers de outbox, frontend y hardening de producción.
+- Admin Web, workers de outbox, automatizaciones y hardening de producción.
 
-## Estado parcial de Fase 12
+## Cierre de Fase 12
 
-- Implementado: modelo/migración, trigger protector, `AuditModule`, interceptor
-  global para mutaciones autenticadas, permiso `audit.read`, endpoint tenant-safe,
-  filtros/paginación, pruebas unitarias y smoke real.
-- Pendiente: overview/KPIs, reporte diario paginado y medición de sus consultas.
+- Implementado: modelo/trigger de auditoría, captura y consulta tenant-safe,
+  `ReportsModule`, overview multidominio, reporte diario, rangos acotados, CLP
+  exacto, pruebas, smoke real y medición de consultas.
+- No se agregó migración de reportes: son proyecciones de lectura y el planner no
+  mostró evidencia suficiente para otro índice en el dataset local.
 - Alcance conocido: los rechazos 401/403 ocurren antes del interceptor y no generan
   `AuditLog`; si una finalización falla, la mutación exitosa conserva su respuesta
   y el registro durable queda `ATTEMPTED` para diagnóstico/reconciliación.
@@ -190,6 +200,9 @@ FASE 13 — Admin Web.
 - Las mutaciones autenticadas escriben primero un intento de auditoría; si esa
   escritura falla, el handler no se ejecuta. La finalización nunca almacena el
   body/query/error y un fallo posterior no reemplaza la respuesta de negocio.
+- Los reportes derivan el tenant de la sesión, usan UTC y rangos de hasta 366 días.
+  Ventas realizadas son órdenes actualmente `CONFIRMED`/`COMPLETED`; pagos y
+  reembolsos se informan aparte por su propia fecha para no confundir venta y caja.
 
 ## Migraciones actuales
 
@@ -259,8 +272,8 @@ documentos.
 
 ## NEXT ACTION
 
-Retomar exactamente en Fase 12 después del checkpoint de auditoría: diseñar e
-implementar `ReportsModule` con un overview de KPIs reales y un reporte diario
-paginado, siempre tenant-safe mediante `reports.read`, rangos temporales acotados,
-importes CLP exactos y pruebas de aislamiento/consultas. Medir las consultas e
-incorporar índices solo si la evidencia lo exige. No iniciar Fase 13 todavía.
+Iniciar Fase 13 con un inventario de contratos y flujos del Admin Web, elegir el
+scaffold frontend compatible con el monorepo y construir primero autenticación,
+sesión y shell responsive contra la API real. No simular datos ni empezar vistas
+de dominio antes de validar login, manejo de 401/403, navegación y configuración
+de entorno sin secretos.

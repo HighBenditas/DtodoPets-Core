@@ -194,6 +194,19 @@ roadmap.
   escriben atómicamente. Una redención conserva snapshots y el carrito finalizado
   muestra los importes históricos de la orden.
 
+### Analytics y auditoría
+
+- Toda mutación autenticada intenta persistir auditoría antes del handler; una
+  lectura exige `audit.read` y nunca incluye body, query, secretos o errores.
+- Los reportes exigen `reports.read`, derivan tenant de sesión y limitan rangos a
+  366 días con inicio inclusivo, fin exclusivo y agrupación UTC.
+- Venta realizada significa orden cuyo estado actual es `CONFIRMED` o `COMPLETED`;
+  pendientes/canceladas permanecen visibles en conteos pero no suman venta.
+- Pagos capturados y reembolsos se agrupan por la fecha de cada movimiento y se
+  muestran separados de ventas. `net=captured-refunded` puede ser negativo.
+- Todo importe de reporte es string CLP exacto; el ticket promedio se redondea al
+  peso más cercano. El diario pagina solo fechas con al menos una venta realizada.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

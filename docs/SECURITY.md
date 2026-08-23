@@ -49,6 +49,8 @@
   tenant, actor y sesión del principal. Solo persiste ruta/acción/resultado e IDs
   operativos; no almacena body, query ni mensajes de excepción. `audit.read`
   protege la consulta y PostgreSQL impide borrar o reescribir entradas terminales.
+- Los reportes requieren `reports.read`, reciben el tenant solo desde la sesión,
+  parametrizan el SQL diario y acotan la ventana a 366 días para limitar abuso.
 
 ## Riesgos pendientes
 

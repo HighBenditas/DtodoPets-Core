@@ -335,6 +335,20 @@ Las mutaciones autenticadas `POST`/`PUT`/`PATCH`/`DELETE` crean un intento antes
 del handler y lo finalizan con outcome, estado HTTP, duración y recurso cuando se
 puede derivar. Rutas públicas y lecturas GET no se registran en esta fase.
 
-## Planificados
+## Reportes
 
-`/api/v1/reports` se documentará aquí solo cuando exista.
+Ambos endpoints exigen `reports.read`, derivan el tenant de la sesión y aceptan
+`from` inclusivo/`to` exclusivo como ISO 8601. Sin rango usan los últimos 30 días;
+el máximo es 366 y la zona de agrupación es UTC.
+
+`GET /api/v1/reports/overview` devuelve moneda/período y KPIs de ventas realizadas
+(órdenes actualmente `CONFIRMED`/`COMPLETED`), conteos de órdenes/carritos por
+estado, clientes activos/nuevos, inventario físico/reservado/disponible, flujo de
+pagos/reembolsos y redenciones realizadas. Importes y ticket promedio redondeado
+al CLP más cercano son strings; pagos se agrupan por su propia fecha y no se
+confunden con ventas por fecha de pedido.
+
+`GET /api/v1/reports/daily-sales` añade `page`/`limit` y pagina días que sí tienen
+ventas realizadas. Cada fila incluye fecha `YYYY-MM-DD`, conteo, subtotal,
+descuento, envío, total y ticket promedio. La respuesta conserva `period`,
+`currency`, `data` y `meta`; no rellena días sin ventas.

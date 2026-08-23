@@ -12,7 +12,8 @@ implementados, junto con pagos, devoluciones y logística fraccionable. El
 detalle de cliente proyecta historial y gasto desde pedidos
 confirmados/completados. Canales, outbox, el adaptador inicial de Mercado Libre
 y el backend público de storefront con promociones/carrito/checkout también
-están operativos. El hito activo es Analytics & Audit. Consulta
+están operativos. Analytics & Audit aporta trazabilidad, KPIs y ventas diarias;
+el hito activo es Admin Web. Consulta
 [el estado del proyecto](docs/PROJECT_STATUS.md) y
 [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 

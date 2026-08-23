@@ -54,6 +54,8 @@ no componentes ya implementados.
   pedido a `OrdersService` mediante hooks dentro de la misma transacción.
 - `AuditModule` aplica un interceptor global a mutaciones autenticadas, persiste
   el intento antes del handler y expone una lectura paginada protegida por tenant.
+- `ReportsModule` construye proyecciones de lectura tenant-safe sobre órdenes,
+  pagos, clientes, inventario, carritos y promociones sin duplicar datos ni tablas.
 - No existen frontend ni workers de publicación/reintento todavía.
 
 ## Límites previstos

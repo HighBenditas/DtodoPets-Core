@@ -15,6 +15,7 @@ import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { ReturnsModule } from './returns/returns.module';
+import { ReportsModule } from './reports/reports.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RolesModule } from './roles/roles.module';
@@ -38,6 +39,7 @@ import { StorefrontModule } from './storefront/storefront.module';
     OrdersModule,
     PaymentsModule,
     PromotionsModule,
+    ReportsModule,
     ReturnsModule,
     ShipmentsModule,
     StorefrontModule,

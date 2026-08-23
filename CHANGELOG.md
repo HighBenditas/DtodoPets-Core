@@ -90,6 +90,12 @@ estructura inspirada en Keep a Changelog.
   filtros por outcome, método, recurso, correlation ID, fecha y búsqueda.
 - Cobertura ampliada a 120 tests en 30 suites, manteniendo 6 e2e, y smoke real de
   éxito/fallo, autorización, sanitización y protección PostgreSQL UPDATE/DELETE.
+- `ReportsModule` protegido por `reports.read`, con overview tenant-safe de ventas,
+  órdenes, clientes, inventario, pagos, carritos y redenciones promocionales.
+- Reporte diario UTC paginado para órdenes confirmadas/completadas, con rango
+  máximo de 366 días e importes/ticket promedio serializados como strings CLP.
+- Cobertura ampliada a 123 tests en 31 suites, manteniendo 6 e2e; smoke real y
+  `EXPLAIN ANALYZE` validaron contratos, consistencia e índices sin otra migración.
 
 ### Changed
 

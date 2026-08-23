@@ -2,10 +2,10 @@
 
 ## Estado actual
 
-- 120 unit tests en 30 suites para configuración, health, Organization, password,
+- 123 unit tests en 31 suites para configuración, health, Organization, password,
   login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo,
   inventario, clientes, pedidos, pagos, devoluciones, shipments, integraciones y
-  Mercado Libre, promociones, storefront y auditoría.
+  Mercado Libre, promociones, storefront, auditoría y reportes.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
@@ -41,6 +41,10 @@
   una sola reserva/redención/evento, replay idéntico y payload cambiado 409.
 - Smoke HTTP/PostgreSQL real de Audit: mutación exitosa/fallida, consulta por
   correlation ID, permiso/401, secreto ausente y trigger bloqueando UPDATE/DELETE.
+- Smoke HTTP real de Reports: overview/daily 200, 401 sin token, rango excesivo
+  400, `reports.read`, paginación y coincidencia de 2 ventas por 75.650 CLP.
+- `EXPLAIN (ANALYZE, BUFFERS)` diario: 0,115 ms sobre seis pedidos; scan secuencial
+  elegido por baja cardinalidad e índice compuesto existente, sin nueva migración.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia
