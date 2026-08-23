@@ -50,6 +50,7 @@ model Organization {
   carts                 Cart[]
   cartItems             CartItem[]
   promotionRedemptions  PromotionRedemption[]
+  auditLogs             AuditLog[]
 }
 
 model Brand {
@@ -385,6 +386,7 @@ model User {
   createdIntegrations           Integration[]           @relation("IntegrationCreator")
   createdExternalReferences     ExternalReference[]     @relation("ExternalReferenceCreator")
   createdPromotions             Promotion[]             @relation("PromotionCreator")
+  auditLogs                     AuditLog[]              @relation("AuditActor")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId])
@@ -1092,4 +1094,39 @@ model PromotionRedemption {
   @@index([organizationId, createdAt])
   @@index([orderId])
   @@index([customerId, createdAt])
+}
+
+enum AuditOutcome {
+  ATTEMPTED
+  SUCCEEDED
+  FAILED
+}
+
+model AuditLog {
+  id             String       @id @default(uuid())
+  organizationId String
+  actorUserId    String
+  sessionId      String
+  outcome        AuditOutcome @default(ATTEMPTED)
+  method         String
+  action         String
+  route          String
+  resourceType   String?
+  resourceId     String?
+  correlationId  String
+  ipAddress      String?
+  httpStatus     Int?
+  durationMs     Int?
+  startedAt      DateTime     @default(now())
+  completedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor        User         @relation("AuditActor", fields: [actorUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([id, organizationId])
+  @@index([organizationId, startedAt])
+  @@index([actorUserId, startedAt])
+  @@index([organizationId, outcome, startedAt])
+  @@index([organizationId, resourceType, resourceId, startedAt])
+  @@index([correlationId])
 }

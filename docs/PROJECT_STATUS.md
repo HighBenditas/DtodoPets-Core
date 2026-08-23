@@ -121,11 +121,23 @@ FASE 13 — Admin Web.
   outbox en la misma transacción; el replay igual no duplica y uno distinto da 409.
 - 110 unit tests en 28 suites y 6 e2e correctos; smoke HTTP real aprobó catálogo
   sanitizado, descuento exacto de 1.499 CLP, una reserva y replay idempotente.
+- Inicio parcial de Fase 12: `AuditLog` ya existe por tenant/actor con outcome,
+  método, acción, ruta, recurso, correlation ID, IP, estado HTTP y duración. Sus
+  constraints exigen un ciclo coherente y el trigger solo permite finalizar una
+  entrada intentada; UPDATE posterior y DELETE quedan bloqueados.
 
 ## Funcionalidades pendientes
 
-- Audit log administrativo, KPIs/reportes e indexación medida.
+- Captura/API del audit log, KPIs/reportes e indexación medida.
 - Workers de outbox, frontend y hardening de producción.
+
+## Trabajo parcial de Fase 12
+
+- Aplicado: modelo/migración `AuditLog`, enum `AuditOutcome`, FKs compuestas,
+  índices por tenant/fecha/actor/outcome/recurso/correlation y trigger protector.
+- No implementado: servicio/controlador de auditoría, captura de mutaciones,
+  permiso `audit.read`, tests específicos, KPIs ni endpoints de reportes.
+- No existe código que escriba `AuditLog` todavía; la tabla local está vacía.
 
 ## Problemas conocidos
 
@@ -186,6 +198,7 @@ FASE 13 — Admin Web.
 | `20260823002100_add_order_source_request_hash` | Aplicada | Huella canónica obligatoria para pedidos externos |
 | `20260823002200_fix_order_source_pair_constraint` | Aplicada | Trío de origen externo explícitamente completo o nulo |
 | `20260823004000_add_storefront_promotions` | Aplicada | Promociones, carritos, redenciones y origen storefront de pedidos |
+| `20260823005000_add_analytics_audit` | Aplicada | Base persistente e inmutable de auditoría administrativa |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, treinta y tres permisos, una
@@ -230,6 +243,8 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Analytics & Audit: definir un `AuditLog` seguro para mutaciones
-administrativas y KPIs/reportes tenant-safe basados en datos transaccionales
-reales, con paginación, permisos e índices medidos antes de optimizar.
+Continuar exactamente en Fase 12 desde la tabla `AuditLog` ya migrada: implementar
+`AuditModule` con captura de mutaciones autenticadas sin guardar body/PII/secrets,
+añadir `audit.read` y `GET /api/v1/audit-logs` tenant-safe con filtros/paginación,
+crear sus pruebas y solo después iniciar overview/KPIs/reportes diarios. No crear
+otra migración para `AuditLog` salvo que las pruebas revelen una corrección real.

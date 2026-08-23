@@ -4,8 +4,8 @@
 
 PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
 Customers, Orders, Payments, Returns, Logistics, Integrations, Mercado Libre,
-Promotions y Storefront. Hay dieciséis migraciones aplicadas; la última es
-`20260823004000_add_storefront_promotions`.
+Promotions, Storefront y la base persistente de Audit. Hay diecisiete migraciones
+aplicadas; la última es `20260823005000_add_analytics_audit`.
 
 ```mermaid
 erDiagram
@@ -41,6 +41,7 @@ erDiagram
   Organization ||--o{ Promotion : owns
   Organization ||--o{ Cart : owns
   Organization ||--o{ PromotionRedemption : owns
+  Organization ||--o{ AuditLog : records
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -86,6 +87,7 @@ erDiagram
   Cart ||--o| Order : checks_out_as
   Promotion ||--o{ PromotionRedemption : redeems
   Order ||--o{ PromotionRedemption : records
+  User ||--o{ AuditLog : acts
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -400,6 +402,19 @@ erDiagram
     decimal discountAmount
     string nameSnapshot
   }
+  AuditLog {
+    string id PK
+    string organizationId FK
+    string actorUserId FK
+    enum outcome
+    string method
+    string action
+    string resourceType
+    string resourceId
+    string correlationId
+    int httpStatus
+    int durationMs
+  }
 ```
 
 ## Organization
@@ -592,6 +607,18 @@ el origen integración/ID externo. `PromotionRedemption` enlaza promoción,
 cliente y orden del mismo tenant y congela nombre, código, tipo, valor, moneda y
 descuento. Pedido, reserva, redención y cierre se confirman en una transacción;
 la base evita que dos carreras creen dos órdenes para un carrito.
+
+## Audit (checkpoint parcial)
+
+`AuditLog` ya persiste tenant, actor, sesión, outcome, método, acción/ruta,
+recurso, correlation ID, IP directa y resultado temporal/HTTP sin columna para
+body o secretos. El ciclo parte en `ATTEMPTED` y puede finalizar una sola vez en
+`SUCCEEDED` o `FAILED`; constraints validan los campos de cada estado y un
+trigger bloquea DELETE, cambios de identidad y nuevas modificaciones terminales.
+
+La tabla e índices están aplicados, pero este checkpoint no incorpora todavía
+servicio, interceptor/captura ni endpoint de lectura. Por tanto la tabla local
+permanece vacía hasta continuar la Fase 12.
 
 ## Estrategia prevista
 

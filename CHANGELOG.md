@@ -80,6 +80,10 @@ estructura inspirada en Keep a Changelog.
   reserva, redención, cierre del carrito y evento outbox se confirman juntos.
 - Cobertura ampliada a 110 tests en 28 suites, 6 e2e y smoke HTTP real de
   catálogo seguro, cupón, reserva única y replays iguales/distintos.
+- Checkpoint inicial de Fase 12: migración `add_analytics_audit` con `AuditLog`,
+  outcome intentado/exitoso/fallido, relaciones tenant/actor, índices de consulta,
+  constraints de ciclo de vida y trigger protector. Captura/API/reportes quedan
+  explícitamente pendientes.
 
 ### Changed
 
