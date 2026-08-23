@@ -93,6 +93,10 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | POST | `/api/v1/integrations/:id/external-references` | Bearer + `integrations.manage` | Mapea entidad externa idempotentemente |
 | POST | `/api/v1/integrations/:id/webhook-receipts` | Bearer + `integrations.manage` | Registra webhook deduplicado |
 | GET | `/api/v1/integrations/events` | Bearer + `integrations.manage` | Lee últimos eventos outbox |
+| GET | `/api/v1/mercado-libre/integrations/:id/listings` | Bearer + `integrations.manage` | Lista mappings y snapshots del adaptador |
+| POST | `/api/v1/mercado-libre/integrations/:id/listings` | Bearer + `integrations.manage` | Crea/actualiza mapping de variante |
+| POST | `/api/v1/mercado-libre/integrations/:id/orders/import` | Bearer + `integrations.manage` | Importa pedido idempotente y reserva stock |
+| POST | `/api/v1/mercado-libre/webhooks/:id` | IP en allowlist | Valida origen y deduplica una notificación pública |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -240,6 +244,33 @@ externo exige carrier; retiro no acepta tracking. El body de transición lleva
 `PENDING → READY → IN_TRANSIT → DELIVERED`, con entrega directa desde `READY` y
 cancelación desde `PENDING`/`READY`. Retiro no entra en tránsito; courier y
 marketplace requieren tracking al despacharse y toda entrega requiere costo real.
+
+## Mercado Libre
+
+Una integración activa debe usar `provider=mercado-libre`. El mapping exige
+`variantId` e `externalItemId`; variación, precio de publicación, comisión,
+disponibilidad y metadata son snapshots opcionales. Cada integración admite un
+solo mapping por variante y por par item/variación. Los importes son enteros CLP
+y se serializan como strings exactos.
+
+Importar una orden exige ID externo, cliente/dirección/bodega locales e items
+externos previamente mapeados. El servidor resuelve variantes y precios, crea
+un `Order PENDING` y reserva stock atómicamente. El mismo ID y payload devuelve
+`idempotent: true`; cualquier cambio semántico con ese ID responde 409 sin una
+nueva reserva. La huella interna nunca aparece en la respuesta.
+
+El webhook no usa Bearer. Recibe el contrato de notificación de Mercado Libre:
+`_id`, `resource`, `topic`, `user_id`, `application_id` y los opcionales
+`attempts`, `sent` y `received`. La IP remota normalizada debe figurar en
+`Integration.config.webhookAllowedIps`; además `user_id`/`application_id` deben
+coincidir con `config.sellerId`/`config.applicationId`. Una fuente o identidad
+no permitida responde 401. No se confía en `X-Forwarded-For` actualmente.
+
+Una recepción válida responde HTTP 200 después de escribir recibo y evento
+outbox en una transacción. El replay reproduce el recibo y el mismo `_id` con
+payload distinto responde 409. El payload solo representa un aviso: un worker
+posterior deberá consultar `resource` con el access token y usar la respuesta
+oficial como estado autoritativo.
 
 ## Planificados
 

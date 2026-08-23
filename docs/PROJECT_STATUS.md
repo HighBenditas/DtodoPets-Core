@@ -7,20 +7,21 @@ Actualizado: 2026-08-22.
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
 Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
 pagos, devoluciones, logística, canales e integraciones multi-tenant. PostgreSQL
-y Redis funcionan en Docker. El siguiente dominio es Mercado Libre; aún no
-existe frontend.
+y Redis funcionan en Docker. El adaptador inicial de Mercado Libre ya mapea
+variantes, importa pedidos y valida el origen de webhooks. El siguiente dominio es
+Storefront & Promotions; aún no existe frontend.
 
 ## Último hito completado
 
-FASE 9 — Sales Channels & Integrations.
+FASE 10 — Mercado Libre.
 
 ## Hito actual
 
-FASE 10 — Mercado Libre.
+FASE 11 — Storefront & Promotions.
 
 ## Próximo hito
 
-FASE 11 — Storefront & Promotions.
+FASE 12 — Analytics & Audit.
 
 ## Funcionalidades terminadas
 
@@ -99,11 +100,21 @@ FASE 11 — Storefront & Promotions.
   webhooks idempotentes por huella SHA-256 y outbox transaccional.
 - 89 unit tests en 24 suites; smoke real confirmó secretos no expuestos,
   replays seguros, conflicto 409 y cuatro eventos internos.
+- `MercadoLibreListing` mapea cada variante a item/variación externa y conserva
+  snapshots exactos CLP de precio/comisión, disponibilidad y metadatos.
+- Pedidos importados quedan ligados a integración/ID externo único y huella
+  canónica; un replay no vuelve a reservar y un payload distinto responde 409.
+- El webhook público exige origen, aplicación y vendedor configurados, deduplica
+  por evento/huella y persiste recibo más evento outbox atómicamente.
+- Reintentos concurrentes de orden/webhook se recuperan desde constraints
+  únicas; referencias/eventos faltantes se reparan sin duplicar el evento.
+- 96 unit tests en 25 suites y 6 e2e correctos; smoke HTTP real de Mercado Libre
+  aprobó mapping, CLP, reserva única, conflictos, allowlist y eventos internos.
 
 ## Funcionalidades pendientes
 
-- Mercado Libre, promociones y storefront.
-- Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
+- Promociones, catálogo público, carrito y checkout de storefront.
+- Workers de outbox, reportes, auditoría, frontend y hardening de producción.
 
 ## Problemas conocidos
 
@@ -133,6 +144,10 @@ FASE 11 — Storefront & Promotions.
   al cliente permanecen separados para medir subsidio/margen.
 - Credenciales de integración se cifran con AES-256-GCM y contexto tenant/key;
   referencias, recibos webhook y outbox se persisten antes de adaptar proveedores.
+- Mercado Libre usa IDs externos estables y huellas canónicas persistidas para
+  no duplicar pedidos ni inventario; el origen se valida antes de persistir.
+- `@Public()` omite tanto JWT como permisos heredados; las rutas administrativas
+  siguen denegadas por defecto y requieren `integrations.manage`.
 
 ## Migraciones actuales
 
@@ -150,6 +165,9 @@ FASE 11 — Storefront & Promotions.
 | `20260822234100_add_payments_returns` | Aplicada | Pagos, reembolsos, devoluciones, idempotencia y constraints CLP |
 | `20260822234617_add_logistics` | Aplicada | Shipments, items, costos, tracking, estados e historial |
 | `20260823000202_add_sales_channels_integrations` | Aplicada | Canales, secretos cifrados, referencias, webhooks y outbox |
+| `20260823002000_add_mercado_libre` | Aplicada | Mapping de listings y origen externo único de pedidos |
+| `20260823002100_add_order_source_request_hash` | Aplicada | Huella canónica obligatoria para pedidos externos |
+| `20260823002200_fix_order_source_pair_constraint` | Aplicada | Trío de origen externo explícitamente completo o nulo |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, treinta y un permisos, una
@@ -161,6 +179,12 @@ dos reembolsos y dos devoluciones ficticias; solo una reintegró stock. Otro
 pedido confirmado contiene cuatro shipments Logistics (uno cancelado).
 El smoke de integraciones agregó un canal, una integración, una referencia, un
 recibo webhook y cuatro eventos outbox ficticios.
+Los dos recorridos locales de Mercado Libre agregaron dos canales,
+integraciones, mappings y pedidos `PENDING` ficticios; el segundo completó un
+recibo webhook y los eventos de listing, importación y webhook. Las pruebas finales
+agregaron dos recibos con contrato real y origen local permitido. El primer flujo se
+detuvo al detectar el antiguo 403 del guard público y se conservó para no borrar
+datos ni reservas existentes.
 
 ## Comandos útiles
 
@@ -185,6 +209,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Mercado Libre sobre las abstracciones de integración: mapping de
-productos, importación idempotente de pedidos, verificación de webhooks y
-sincronización trazable de stock/costos.
+Implementar Storefront & Promotions: separar un contrato público de catálogo y
+disponibilidad, modelar promociones auditables y preparar carrito/checkout sin
+exponer costos, secretos ni superficies administrativas.

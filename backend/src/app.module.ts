@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { LocationsModule } from './locations/locations.module';
+import { MercadoLibreModule } from './mercado-libre/mercado-libre.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -28,6 +29,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     InventoryModule,
     IntegrationsModule,
     LocationsModule,
+    MercadoLibreModule,
     OrganizationsModule,
     OrdersModule,
     PaymentsModule,

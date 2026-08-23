@@ -146,6 +146,26 @@ roadmap.
 - Cada mutación relevante escribe un `DomainEvent` pendiente en la misma
   transacción para que adaptadores posteriores procesen una outbox durable.
 
+### Mercado Libre
+
+- Solo una integración activa con provider `mercado-libre` puede operar el
+  adaptador y siempre queda limitada al tenant autenticado.
+- Una variante se mapea una vez por integración; el par item/variación externo
+  tampoco puede apuntar a dos variantes. Precio, comisión y stock son snapshots,
+  no sustituyen al catálogo/inventario central.
+- Importar una orden resuelve todos los items antes de crearla. Si alguno no
+  está mapeado, no se reserva inventario ni se persiste un pedido parcial.
+- Integración e ID externo identifican una orden. La misma huella reproduce la
+  respuesta sin reservar otra vez; una huella distinta responde 409.
+- La referencia externa y el evento de importación se crean juntos. Un retry
+  repara esos artefactos si faltaran y una constraint decide carreras.
+- El webhook exige una IP normalizada presente en `config.webhookAllowedIps` y
+  que `user_id`/`application_id` coincidan con el vendedor/aplicación configurados
+  antes de leer/escribir recibos. Un evento repetido es idempotente y reutilizar
+  su ID con otro payload responde 409.
+- La ruta webhook es pública solo respecto del Bearer/RBAC; el origen se limita
+  por allowlist. Las demás rutas exigen `integrations.manage`.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

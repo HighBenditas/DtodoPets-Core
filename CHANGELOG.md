@@ -64,17 +64,29 @@ estructura inspirada en Keep a Changelog.
   referencias externas, recibos webhook y outbox transaccional.
 - Credenciales AES-256-GCM ligadas al tenant/integración, API sin exposición de
   ciphertext, webhooks/referencias idempotentes y 89 tests en 24 suites.
+- Migraciones `add_mercado_libre`, `add_order_source_request_hash` y corrección
+  del constraint de origen con mapping, ID único y huella canónica de imports.
+- `MercadoLibreModule` con snapshots de precio/comisión/stock, importación de
+  pedidos sin doble reserva y webhooks con allowlist IP deduplicados por outbox.
+- Cobertura ampliada a 96 tests en 25 suites y smoke HTTP real de mapping,
+  replays, conflictos de payload, origen permitido/rechazado y eventos internos.
 
 ### Changed
 
 - ESLint ignora el cliente generado por Prisma.
 - Las consultas independientes de servicios se ejecutan secuencialmente para
   evitar el uso concurrente de una conexión, compatible con el próximo `pg@9`.
+- Los pedidos pueden declarar una integración/ID externo y conservan una huella
+  interna que no se expone en las respuestas.
 
 ### Fixed
 
 - Protección Git para archivos `.env` de la raíz y cliente Prisma generado.
 - Script `start:prod` corregido para la salida real `dist/src/main` de Nest.
+- El guard de permisos ahora respeta rutas `@Public()` incluso cuando el
+  controlador hereda un permiso administrativo.
+- Carreras de webhook y ventanas entre pedido importado/referencia outbox se
+  recuperan idempotentemente desde las constraints únicas.
 
 ### Security
 
@@ -83,3 +95,6 @@ estructura inspirada en Keep a Changelog.
   no se aplicó el downgrade destructivo propuesto por `npm audit --force`.
 - Passwords usan scrypt con salt; refresh tokens se guardan hasheados, rotan y
   sus sesiones pueden revocarse inmediatamente.
+- El webhook de Mercado Libre exige una IP normalizada presente en
+  `config.webhookAllowedIps` y IDs de aplicación/vendedor configurados antes de
+  escribir datos; responde HTTP 200 rápido.

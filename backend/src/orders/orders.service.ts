@@ -47,6 +47,10 @@ const orderDetailInclude = {
   warehouse: { select: { id: true, name: true } },
 } satisfies Prisma.OrderInclude;
 
+const orderPublicOmit = {
+  sourceRequestHash: true,
+} satisfies Prisma.OrderOmit;
+
 interface LockedBalance {
   id: string;
   organizationId: string;
@@ -72,6 +76,12 @@ interface PreparedItem {
   totalAmount: number;
   unitPriceAmount: number;
   variantId: string;
+}
+
+export interface OrderSourceContext {
+  externalOrderId: string;
+  integrationId: string;
+  requestHash: string;
 }
 
 @Injectable()
@@ -101,6 +111,7 @@ export class OrdersService {
       this.prisma.order.findMany({
         where,
         include: orderListInclude,
+        omit: orderPublicOmit,
         ...getPagination(query),
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       }),
@@ -113,6 +124,7 @@ export class OrdersService {
     const order = await this.prisma.order.findFirst({
       where: { id, organizationId },
       include: orderDetailInclude,
+      omit: orderPublicOmit,
     });
     if (!order) throw new NotFoundException('Order not found');
     return order;
@@ -122,6 +134,7 @@ export class OrdersService {
     organizationId: string,
     actorUserId: string,
     dto: CreateOrderDto,
+    source?: OrderSourceContext,
   ) {
     validateUniqueVariants(dto.items.map(({ variantId }) => variantId));
     const customer = await this.prisma.customer.findFirst({
@@ -263,6 +276,9 @@ export class OrdersService {
             notes: dto.notes?.trim() || null,
             number,
             organizationId,
+            sourceIntegrationId: source?.integrationId,
+            externalOrderId: source?.externalOrderId,
+            sourceRequestHash: source?.requestHash,
             shippingAmount: toClpDecimal(shippingAmount),
             shippingSnapshot: addressSnapshot(address),
             subtotalAmount: toClpDecimal(subtotalAmount),
@@ -678,6 +694,7 @@ function getOrderOrThrow(
   return transaction.order.findUniqueOrThrow({
     where: { id: orderId },
     include: orderDetailInclude,
+    omit: orderPublicOmit,
   });
 }
 

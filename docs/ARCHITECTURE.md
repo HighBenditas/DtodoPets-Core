@@ -45,7 +45,9 @@ no componentes ya implementados.
   y conserva costos reales, tracking e historial de estados.
 - `IntegrationsModule` mantiene canales, secretos cifrados, referencias externas,
   deduplicación de webhooks y una outbox transaccional.
-- No existen frontend, eventos ni adaptadores todavía.
+- `MercadoLibreModule` es el primer adaptador: traduce IDs externos a variantes,
+  reutiliza `OrdersService`, valida el origen y entrega trabajo durable a la outbox.
+- No existen frontend ni workers de publicación/reintento todavía.
 
 ## Límites previstos
 

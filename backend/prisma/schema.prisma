@@ -44,6 +44,7 @@ model Organization {
   externalReferences    ExternalReference[]
   webhookReceipts       WebhookReceipt[]
   domainEvents          DomainEvent[]
+  mercadoLibreListings  MercadoLibreListing[]
 }
 
 model Brand {
@@ -127,10 +128,11 @@ model ProductVariant {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  product           Product            @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  inventoryBalances InventoryBalance[]
-  orderItems        OrderItem[]
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product              Product               @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  inventoryBalances    InventoryBalance[]
+  orderItems           OrderItem[]
+  mercadoLibreListings MercadoLibreListing[]
 
   @@unique([organizationId, sku])
   @@unique([organizationId, barcode])
@@ -454,40 +456,45 @@ enum OrderStatus {
 }
 
 model Order {
-  id                String      @id @default(uuid())
-  organizationId    String
-  number            String
-  customerId        String
-  customerAddressId String
-  warehouseId       String
-  status            OrderStatus @default(PENDING)
-  currency          String      @default("CLP")
-  subtotalAmount    Decimal     @db.Decimal(14, 0)
-  discountAmount    Decimal     @default(0) @db.Decimal(14, 0)
-  shippingAmount    Decimal     @default(0) @db.Decimal(14, 0)
-  totalAmount       Decimal     @db.Decimal(14, 0)
-  customerSnapshot  Json
-  shippingSnapshot  Json
-  notes             String?
-  createdByUserId   String
-  confirmedAt       DateTime?
-  cancelledAt       DateTime?
-  completedAt       DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id                  String      @id @default(uuid())
+  organizationId      String
+  number              String
+  customerId          String
+  customerAddressId   String
+  warehouseId         String
+  status              OrderStatus @default(PENDING)
+  currency            String      @default("CLP")
+  subtotalAmount      Decimal     @db.Decimal(14, 0)
+  discountAmount      Decimal     @default(0) @db.Decimal(14, 0)
+  shippingAmount      Decimal     @default(0) @db.Decimal(14, 0)
+  totalAmount         Decimal     @db.Decimal(14, 0)
+  customerSnapshot    Json
+  shippingSnapshot    Json
+  notes               String?
+  sourceIntegrationId String?
+  externalOrderId     String?
+  sourceRequestHash   String?
+  createdByUserId     String
+  confirmedAt         DateTime?
+  cancelledAt         DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
-  organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  customer        Customer             @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  customerAddress CustomerAddress      @relation(fields: [customerAddressId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  warehouse       Warehouse            @relation(fields: [warehouseId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  createdBy       User                 @relation("OrderCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  items           OrderItem[]
-  statusHistory   OrderStatusHistory[]
-  payments        Payment[]
-  returns         OrderReturn[]
-  shipments       Shipment[]
+  organization      Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer          Customer             @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customerAddress   CustomerAddress      @relation(fields: [customerAddressId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  warehouse         Warehouse            @relation(fields: [warehouseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy         User                 @relation("OrderCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+  payments          Payment[]
+  returns           OrderReturn[]
+  shipments         Shipment[]
+  sourceIntegration Integration?         @relation("OrderSourceIntegration", fields: [sourceIntegrationId, organizationId], references: [id, organizationId], onDelete: Restrict)
 
   @@unique([organizationId, number])
+  @@unique([sourceIntegrationId, externalOrderId])
   @@unique([id, organizationId])
   @@index([organizationId, status, createdAt])
   @@index([customerId, createdAt])
@@ -808,12 +815,14 @@ model Integration {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  salesChannel       SalesChannel?       @relation(fields: [salesChannelId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  createdBy          User                @relation("IntegrationCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  externalReferences ExternalReference[]
-  webhookReceipts    WebhookReceipt[]
-  domainEvents       DomainEvent[]
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  salesChannel         SalesChannel?         @relation(fields: [salesChannelId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy            User                  @relation("IntegrationCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  externalReferences   ExternalReference[]
+  webhookReceipts      WebhookReceipt[]
+  domainEvents         DomainEvent[]
+  mercadoLibreListings MercadoLibreListing[]
+  sourceOrders         Order[]               @relation("OrderSourceIntegration")
 
   @@unique([organizationId, key])
   @@unique([id, organizationId])
@@ -891,4 +900,38 @@ model DomainEvent {
   @@index([organizationId, status, availableAt])
   @@index([aggregateType, aggregateId, createdAt])
   @@index([integrationId, createdAt])
+}
+
+enum MercadoLibreListingStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+model MercadoLibreListing {
+  id                  String                    @id @default(uuid())
+  organizationId      String
+  integrationId       String
+  variantId           String
+  externalItemId      String
+  externalVariationId String                    @default("")
+  status              MercadoLibreListingStatus @default(ACTIVE)
+  currency            String                    @default("CLP")
+  listingPriceAmount  Decimal?                  @db.Decimal(14, 0)
+  feeAmount           Decimal?                  @db.Decimal(14, 0)
+  availableQuantity   Int?
+  metadata            Json?
+  lastSyncedAt        DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  integration  Integration    @relation(fields: [integrationId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  variant      ProductVariant @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([integrationId, externalItemId, externalVariationId])
+  @@unique([integrationId, variantId])
+  @@unique([id, organizationId])
+  @@index([organizationId, status, updatedAt])
+  @@index([variantId])
 }

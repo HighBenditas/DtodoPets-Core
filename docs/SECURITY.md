@@ -30,6 +30,13 @@
   limitan al tenant y la huella idempotente tampoco se expone.
 - Credenciales de integración usan AES-256-GCM con nonce aleatorio y AAD
   tenant/key. La API solo expone `hasCredentials`; nunca ciphertext ni secretos.
+- El webhook de Mercado Libre normaliza la IP remota y exige que figure en
+  `config.webhookAllowedIps`; también compara vendedor y aplicación configurados.
+  Sus IDs/huellas evitan replays con contenido distinto.
+- Las huellas de pedidos externos se persisten para idempotencia pero se omiten
+  de las respuestas; las credenciales solo se descifran dentro del adaptador.
+- `@Public()` omite coherentemente JWT y RBAC heredado. Debe usarse solo cuando
+  exista otro control explícito, como la allowlist del webhook.
 
 ## Riesgos pendientes
 
@@ -41,6 +48,11 @@
 - Retención, exportación y eliminación/anonimización de datos personales deberá
   definirse antes de producción; hoy se usa desactivación lógica para conservar
   consistencia histórica.
+- La lista de IPs de Mercado Libre debe revisarse contra su documentación. Antes
+  de operar detrás de un proxy se deberá configurar un ingress confiable; el
+  backend actual usa la IP directa y no confía en `X-Forwarded-For`.
+- El worker de outbox deberá validar `resource` y consultar la API de Mercado
+  Libre antes de aplicar el payload de una notificación al estado del negocio.
 
 ## Reporte y revisión
 

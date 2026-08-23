@@ -2,9 +2,10 @@
 
 ## Estado actual
 
-- 89 unit tests en 24 suites para configuración, health, Organization, password,
+- 96 unit tests en 25 suites para configuración, health, Organization, password,
   login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo,
-  inventario, clientes, pedidos, pagos, devoluciones, shipments e integraciones.
+  inventario, clientes, pedidos, pagos, devoluciones, shipments, integraciones y
+  Mercado Libre.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
@@ -32,6 +33,9 @@
   subsidio $400, margen $50 e inventario sin cambios durante fulfillment.
 - Smoke HTTP real de Integrations: ciphertext/secreto no expuestos, referencia y
   webhook reintentables, payload distinto 409 y cuatro eventos outbox.
+- Smoke HTTP real de Mercado Libre: mapping con importes CLP exactos, orden con
+  una sola reserva tras replay, ID/payload distinto 409, origen permitido 200 en
+  20 ms, vendedor distinto 401 y eventos outbox de listing/orden/webhook.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia

@@ -70,12 +70,13 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Credenciales protegidas, webhooks e idempotencia reutilizable.
 - ✅ Eventos internos mediante outbox transaccional y base para adaptadores.
 
-## 🟡 FASE 10 — Mercado Libre
+## ✅ FASE 10 — Mercado Libre
 
-- Mapping de productos, importación idempotente de pedidos, stock y costos.
-- Verificación de webhooks y procesamiento reintentable.
+- ✅ Mapping tenant-safe de variantes con snapshots de stock, precio y comisión.
+- ✅ Importación de pedidos idempotente por ID externo y huella canónica.
+- ✅ Verificación de origen de webhooks, deduplicación y outbox reintentable.
 
-## ⬜ FASE 11 — Storefront & Promotions
+## 🟡 FASE 11 — Storefront & Promotions
 
 - API pública sin costos ni información administrativa.
 - Catálogo, disponibilidad, carrito, checkout y promociones auditables.

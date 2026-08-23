@@ -3,9 +3,9 @@
 ## Estado real
 
 PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
-Customers, Orders, Payments, Returns, Logistics e Integrations. Hay doce
-migraciones aplicadas; la última es
-`20260823000202_add_sales_channels_integrations`.
+Customers, Orders, Payments, Returns, Logistics, Integrations y Mercado Libre.
+Hay quince migraciones aplicadas; la última es
+`20260823002200_fix_order_source_pair_constraint`.
 
 ```mermaid
 erDiagram
@@ -32,6 +32,12 @@ erDiagram
   Organization ||--o{ Shipment : owns
   Organization ||--o{ ShipmentItem : owns
   Organization ||--o{ ShipmentStatusHistory : owns
+  Organization ||--o{ SalesChannel : owns
+  Organization ||--o{ Integration : owns
+  Organization ||--o{ ExternalReference : owns
+  Organization ||--o{ WebhookReceipt : owns
+  Organization ||--o{ DomainEvent : owns
+  Organization ||--o{ MercadoLibreListing : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -61,6 +67,13 @@ erDiagram
   OrderItem ||--o{ ShipmentItem : allocated_to
   Shipment ||--o{ ShipmentStatusHistory : records
   ProductVariant ||--o{ OrderItem : snapshots
+  SalesChannel ||--o{ Integration : connects
+  Integration ||--o{ ExternalReference : maps
+  Integration ||--o{ WebhookReceipt : receives
+  Integration ||--o{ DomainEvent : emits
+  Integration ||--o{ MercadoLibreListing : maps
+  Integration ||--o{ Order : imports
+  ProductVariant ||--o{ MercadoLibreListing : publishes
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -198,6 +211,9 @@ erDiagram
     decimal totalAmount
     json customerSnapshot
     json shippingSnapshot
+    string sourceIntegrationId FK
+    string externalOrderId
+    string sourceRequestHash
   }
   OrderItem {
     string id PK
@@ -282,6 +298,52 @@ erDiagram
     string trackingNumber
     decimal actualCostAmount
     string actorUserId FK
+  }
+  SalesChannel {
+    string id PK
+    string organizationId FK
+    string key
+    enum type
+    boolean active
+  }
+  Integration {
+    string id PK
+    string organizationId FK
+    string salesChannelId FK
+    string key
+    string provider
+    string credentialsCiphertext
+  }
+  ExternalReference {
+    string id PK
+    string integrationId FK
+    enum entityType
+    string entityId
+    string externalId
+  }
+  WebhookReceipt {
+    string id PK
+    string integrationId FK
+    string externalEventId
+    string payloadHash
+    enum status
+  }
+  DomainEvent {
+    string id PK
+    string integrationId FK
+    string aggregateType
+    string type
+    enum status
+  }
+  MercadoLibreListing {
+    string id PK
+    string integrationId FK
+    string variantId FK
+    string externalItemId
+    string externalVariationId
+    decimal listingPriceAmount
+    decimal feeAmount
+    int availableQuantity
   }
 ```
 
@@ -385,6 +447,12 @@ ser exactamente precio por cantidad. La reserva de inventario asociada queda
 de actualización. Creación, cambio de estado, reservas y movimientos ocurren en
 la misma transacción.
 
+Una orden externa conserva `sourceIntegrationId`, `externalOrderId` y
+`sourceRequestHash` como un contrato indivisible. La pareja integración/ID es
+única y la huella debe ser SHA-256 hexadecimal; así la base resuelve carreras de
+importación sin duplicar pedido ni reserva. La huella es interna y se omite de
+las respuestas.
+
 ## Pagos y reembolsos
 
 `Payment` referencia un pedido del mismo tenant y conserva método, estado,
@@ -438,11 +506,24 @@ tipo. `WebhookReceipt` conserva payload, huella SHA-256, estado e intentos con
 unicidad por evento externo. `DomainEvent` es la outbox durable con estado,
 intentos, disponibilidad y publicación; se inserta junto con la mutación.
 
+## Mercado Libre
+
+`MercadoLibreListing` relaciona una integración `provider=mercado-libre` con
+una variante del mismo tenant. Mantiene item/variación externos, estado,
+disponibilidad, metadata, última sincronización y snapshots opcionales de precio
+y comisión `Decimal(14,0)` en CLP. Unicidades separadas impiden mapear dos veces
+la misma variante o el mismo par externo dentro de una integración.
+
+Las FKs compuestas refuerzan que integración, organización y variante pertenezcan
+al mismo tenant. Checks prohíben IDs en blanco, cantidades/importes negativos y
+otra moneda. La importación crea `ExternalReference(ORDER)` y un `DomainEvent`
+durable; el webhook crea recibo/evento atómicamente.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Adaptadores específicos reutilizarán referencias, recibos y outbox existentes.
+- Nuevos adaptadores reutilizarán referencias, recibos y outbox existentes.
 
 Las secciones previstas no representan tablas implementadas todavía. Cada hito
 actualizará este documento junto con `schema.prisma`.
