@@ -79,6 +79,10 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | GET | `/api/v1/returns` | Bearer + `returns.read` | Lista devoluciones parciales |
 | GET | `/api/v1/returns/:id` | Bearer + `returns.read` | Obtiene items de una devolución |
 | POST | `/api/v1/returns` | Bearer + `returns.create` | Devuelve items y reintegra stock opcionalmente |
+| GET | `/api/v1/shipments` | Bearer + `shipments.read` | Lista shipments, costos y tracking |
+| GET | `/api/v1/shipments/:id` | Bearer + `shipments.read` | Obtiene items e historial logístico |
+| POST | `/api/v1/shipments` | Bearer + `shipments.create` | Crea shipment parcial idempotente |
+| POST | `/api/v1/shipments/:id/transitions` | Bearer + `shipments.update` | Cambia estado y datos logísticos |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -208,7 +212,26 @@ reintegra físico al saldo de origen y crea un movimiento `RETURN`; `false`
 conserva la trazabilidad sin alterar inventario. El reembolso monetario sigue
 siendo una operación explícita y separada.
 
+## Logistics
+
+La lista acepta `page`, `limit`, `orderId`, `status`, `type` y `search` por
+número, carrier, tracking, pedido o cliente. El detalle incluye items, actor e
+historial cronológico. `subsidyAmount` y `shippingMarginAmount` son nulos hasta
+conocer costo real y luego se serializan como strings CLP exactos.
+
+Crear exige pedido confirmado/completado, items únicos, tipo e
+`idempotencyKey`. Acepta cobro al cliente asignado, costo real, carrier,
+servicio, tracking y notas. La cantidad activa acumulada no supera cada item y
+el cobro asignado activo no supera `Order.shippingAmount`; cancelar libera ambos.
+
+Tipos: `PICKUP`, `OWN_DELIVERY`, `MARKETPLACE` y `EXTERNAL_COURIER`. Courier
+externo exige carrier; retiro no acepta tracking. El body de transición lleva
+`status`, `reason` y metadatos/costo opcionales. Flujo permitido:
+`PENDING → READY → IN_TRANSIT → DELIVERED`, con entrega directa desde `READY` y
+cancelación desde `PENDING`/`READY`. Retiro no entra en tránsito; courier y
+marketplace requieren tracking al despacharse y toda entrega requiere costo real.
+
 ## Planificados
 
-`/api/v1/shipments`, `/channels`,
+`/api/v1/channels`,
 `/integrations` y `/reports` se documentarán aquí solo cuando existan.

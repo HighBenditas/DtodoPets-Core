@@ -115,6 +115,25 @@ roadmap.
   trazables y deliberadamente separados.
 - Una devolución completa es idempotente por clave y huella de su payload.
 
+### Logistics
+
+- Solo pedidos `CONFIRMED`/`COMPLETED` admiten shipments y un pedido puede
+  dividirse en varios.
+- La cantidad activa asignada de cada item no supera lo comprado. Cancelar un
+  shipment libera sus cantidades para un reemplazo.
+- El cobro al cliente se asigna entre shipments activos sin superar
+  `Order.shippingAmount`; costo real se registra aparte.
+- `subsidy=max(costo real-cobro asignado, 0)` y
+  `margen=max(cobro asignado-costo real, 0)`, siempre en CLP exacto.
+- Retiro no usa tracking ni estado en tránsito. Courier externo exige carrier;
+  courier/marketplace en tránsito exigen tracking.
+- Un shipment entregado siempre tiene costo real, incluso cero. Estados y
+  metadatos quedan registrados en historial con actor y timestamps.
+- Solo `PENDING`/`READY` se cancelan; entregado/cancelado es terminal. Repetir el
+  estado actual es idempotente.
+- Crear shipment es idempotente por clave/huella y se serializa bajo lock del
+  pedido junto con asignación de items y cobro.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

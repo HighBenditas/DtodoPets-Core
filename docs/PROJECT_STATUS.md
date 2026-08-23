@@ -6,20 +6,21 @@ Actualizado: 2026-08-22.
 
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
 Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
-pagos y devoluciones multi-tenant. PostgreSQL y Redis funcionan en Docker. El
-siguiente dominio incompleto es Logistics; aún no existe frontend.
+pagos, devoluciones y logística multi-tenant. PostgreSQL y Redis funcionan en
+Docker. El siguiente dominio incompleto es Sales Channels & Integrations; aún
+no existe frontend.
 
 ## Último hito completado
 
-FASE 7 — Payments & Returns.
+FASE 8 — Logistics.
 
 ## Hito actual
 
-FASE 8 — Logistics.
+FASE 9 — Sales Channels & Integrations.
 
 ## Próximo hito
 
-FASE 9 — Sales Channels & Integrations.
+FASE 10 — Mercado Libre.
 
 ## Funcionalidades terminadas
 
@@ -84,11 +85,21 @@ FASE 9 — Sales Channels & Integrations.
   movimiento `RETURN` append-only cuando corresponde.
 - 81 unit tests en 22 suites y 6 e2e correctos; smoke HTTP real aprobó dos pagos,
   sobrecobro 409, reembolsos, replays y devoluciones con/sin reintegro.
+- Shipments multi-tenant fraccionables por item para retiro, despacho propio,
+  marketplace y courier externo.
+- Cobro logístico asignado limitado al envío cobrado en el pedido; costo real
+  separado con proyecciones exactas de subsidio y margen.
+- Estados `PENDING`/`READY`/`IN_TRANSIT`/`DELIVERED`/`CANCELLED`, timestamps,
+  tracking e historial append-only con actor y snapshots logísticos.
+- Cancelar libera cantidades/cobro para un reemplazo; locks del pedido evitan
+  sobreasignación concurrente e idempotencia protege la creación.
+- 87 unit tests en 23 suites y 6 e2e correctos; smoke HTTP real aprobó cuatro
+  shipments, tracking/costo obligatorios, subsidio/margen y cancelación.
 
 ## Funcionalidades pendientes
 
-- Logística, shipments, retiro y tracking.
-- Canales, integraciones y promociones.
+- Canales de venta, integraciones, referencias externas y eventos internos.
+- Mercado Libre, promociones y storefront.
 - Reportes, auditoría, eventos, webhooks, frontend y hardening de producción.
 
 ## Problemas conocidos
@@ -115,6 +126,8 @@ FASE 9 — Sales Channels & Integrations.
   transiciones de inventario e historial son parte de la misma transacción.
 - Pagos, reembolsos y devoluciones son entidades separadas; serializan por
   pedido y usan claves idempotentes con una huella del payload normalizado.
+- Shipments asignan cantidades y cobro del pedido bajo lock; costo real y cobro
+  al cliente permanecen separados para medir subsidio/margen.
 
 ## Migraciones actuales
 
@@ -130,14 +143,16 @@ FASE 9 — Sales Channels & Integrations.
 | `20260822233100_add_orders` | Aplicada | Pedidos, items, snapshots, totales e historial de estados |
 | `20260822234000_extend_inventory_for_returns` | Aplicada | Movimiento `RETURN` para reintegros trazables |
 | `20260822234100_add_payments_returns` | Aplicada | Pagos, reembolsos, devoluciones, idempotencia y constraints CLP |
+| `20260822234617_add_logistics` | Aplicada | Shipments, items, costos, tracking, estados e historial |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
-tests: una organización, dos usuarios, seis roles, veintiocho permisos, una
+tests: una organización, dos usuarios, seis roles, treinta y un permisos, una
 sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
 imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
 También contiene un cliente ficticio con dos direcciones y dos pedidos del
 smoke de Orders: uno confirmado y otro cancelado. El confirmado tiene dos pagos,
-dos reembolsos y dos devoluciones ficticias; solo una reintegró stock.
+dos reembolsos y dos devoluciones ficticias; solo una reintegró stock. Otro
+pedido confirmado contiene cuatro shipments Logistics (uno cancelado).
 
 ## Comandos útiles
 
@@ -162,6 +177,7 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Logistics con shipments separados del pedido, retiro y despacho,
-métodos/costos, tracking e historial de estados. Debe admitir múltiples envíos
-por pedido sin mezclar costo cobrado al cliente con costo logístico real.
+Implementar Sales Channels & Integrations con `SalesChannel`, configuración de
+integración y `ExternalReference`; proteger credenciales, normalizar
+idempotencia/webhooks y publicar eventos internos reintentables sin acoplar el
+core a proveedores concretos.

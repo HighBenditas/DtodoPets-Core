@@ -2,9 +2,9 @@
 
 ## Estado actual
 
-- 81 unit tests en 22 suites para configuración, health, Organization, password,
+- 87 unit tests en 23 suites para configuración, health, Organization, password,
   login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo,
-  inventario, clientes, pedidos, pagos y devoluciones.
+  inventario, clientes, pedidos, pagos, devoluciones y shipments.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
@@ -27,6 +27,9 @@
 - Smoke HTTP real de Payments & Returns: dos pagos exactos, sobrecobro 409,
   reembolso parcial/completo, replays y conflictos de huella, límite de cantidad
   devuelta y un único reintegro `RETURN` de stock 78 → 79.
+- Smoke HTTP real de Logistics: pedido de tres unidades, cuatro shipments (uno
+  cancelado/reemplazado), sobreasignaciones 409, tracking/costo obligatorios,
+  subsidio $400, margen $50 e inventario sin cambios durante fulfillment.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia
@@ -47,7 +50,7 @@ identifique explícitamente un entorno de test.
 - CRUD de catálogo con validación/paginación.
 - Ajustes/reservas y falta de stock.
 - Creación, confirmación y cancelación atómica de pedidos.
-- Shipments, tracking y múltiples despachos por pedido.
+- Canales, referencias externas, webhooks e idempotencia de integraciones.
 
 ## Comandos
 

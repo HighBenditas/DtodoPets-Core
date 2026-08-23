@@ -36,6 +36,9 @@ model Organization {
   paymentRefunds        PaymentRefund[]
   orderReturns          OrderReturn[]
   orderReturnItems      OrderReturnItem[]
+  shipments             Shipment[]
+  shipmentItems         ShipmentItem[]
+  shipmentStatusHistory ShipmentStatusHistory[]
 }
 
 model Brand {
@@ -348,18 +351,20 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization                  Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization                  Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   roles                         UserRole[]
   sessions                      AuthSession[]
-  inventoryMovements            InventoryMovement[]    @relation("InventoryMovementActor")
-  createdInventoryReservations  InventoryReservation[] @relation("InventoryReservationCreator")
-  releasedInventoryReservations InventoryReservation[] @relation("InventoryReservationReleaser")
-  consumedInventoryReservations InventoryReservation[] @relation("InventoryReservationConsumer")
-  createdOrders                 Order[]                @relation("OrderCreator")
-  orderStatusChanges            OrderStatusHistory[]   @relation("OrderStatusActor")
-  createdPayments               Payment[]              @relation("PaymentCreator")
-  createdPaymentRefunds         PaymentRefund[]        @relation("PaymentRefundCreator")
-  createdOrderReturns           OrderReturn[]          @relation("OrderReturnCreator")
+  inventoryMovements            InventoryMovement[]     @relation("InventoryMovementActor")
+  createdInventoryReservations  InventoryReservation[]  @relation("InventoryReservationCreator")
+  releasedInventoryReservations InventoryReservation[]  @relation("InventoryReservationReleaser")
+  consumedInventoryReservations InventoryReservation[]  @relation("InventoryReservationConsumer")
+  createdOrders                 Order[]                 @relation("OrderCreator")
+  orderStatusChanges            OrderStatusHistory[]    @relation("OrderStatusActor")
+  createdPayments               Payment[]               @relation("PaymentCreator")
+  createdPaymentRefunds         PaymentRefund[]         @relation("PaymentRefundCreator")
+  createdOrderReturns           OrderReturn[]           @relation("OrderReturnCreator")
+  createdShipments              Shipment[]              @relation("ShipmentCreator")
+  shipmentStatusChanges         ShipmentStatusHistory[] @relation("ShipmentStatusActor")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId])
@@ -472,6 +477,7 @@ model Order {
   statusHistory   OrderStatusHistory[]
   payments        Payment[]
   returns         OrderReturn[]
+  shipments       Shipment[]
 
   @@unique([organizationId, number])
   @@unique([id, organizationId])
@@ -500,6 +506,7 @@ model OrderItem {
   variant              ProductVariant        @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
   inventoryReservation InventoryReservation? @relation(fields: [inventoryReservationId, organizationId], references: [id, organizationId], onDelete: Restrict)
   returnItems          OrderReturnItem[]
+  shipmentItems        ShipmentItem[]
 
   @@unique([id, organizationId])
   @@unique([orderId, variantId])
@@ -633,4 +640,97 @@ model OrderReturnItem {
   @@unique([id, organizationId])
   @@index([organizationId, createdAt])
   @@index([orderItemId, createdAt])
+}
+
+enum ShipmentType {
+  PICKUP
+  OWN_DELIVERY
+  MARKETPLACE
+  EXTERNAL_COURIER
+}
+
+enum ShipmentStatus {
+  PENDING
+  READY
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+model Shipment {
+  id                   String         @id @default(uuid())
+  organizationId       String
+  orderId              String
+  number               String
+  type                 ShipmentType
+  status               ShipmentStatus @default(PENDING)
+  currency             String         @default("CLP")
+  customerChargeAmount Decimal        @default(0) @db.Decimal(14, 0)
+  actualCostAmount     Decimal?       @db.Decimal(14, 0)
+  carrier              String?
+  serviceName          String?
+  trackingNumber       String?
+  trackingUrl          String?
+  notes                String?
+  idempotencyKey       String
+  requestHash          String
+  createdByUserId      String
+  readyAt              DateTime?
+  shippedAt            DateTime?
+  deliveredAt          DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  organization  Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  order         Order                   @relation(fields: [orderId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy     User                    @relation("ShipmentCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  items         ShipmentItem[]
+  statusHistory ShipmentStatusHistory[]
+
+  @@unique([organizationId, number])
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, carrier, trackingNumber])
+  @@unique([id, organizationId])
+  @@index([organizationId, status, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model ShipmentItem {
+  id             String   @id @default(uuid())
+  organizationId String
+  shipmentId     String
+  orderItemId    String
+  quantity       Int
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shipment     Shipment     @relation(fields: [shipmentId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  orderItem    OrderItem    @relation(fields: [orderItemId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([shipmentId, orderItemId])
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([orderItemId, createdAt])
+}
+
+model ShipmentStatusHistory {
+  id               String         @id @default(uuid())
+  organizationId   String
+  shipmentId       String
+  status           ShipmentStatus
+  reason           String
+  carrier          String?
+  trackingNumber   String?
+  trackingUrl      String?
+  actualCostAmount Decimal?       @db.Decimal(14, 0)
+  actorUserId      String
+  createdAt        DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  shipment     Shipment     @relation(fields: [shipmentId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  actor        User         @relation("ShipmentStatusActor", fields: [actorUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+  @@index([shipmentId, createdAt])
 }

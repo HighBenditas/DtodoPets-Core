@@ -3,9 +3,8 @@
 ## Estado real
 
 PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
-Customers, Orders, Payments y Returns. Hay diez migraciones aplicadas; las
-últimas son `20260822234000_extend_inventory_for_returns` y
-`20260822234100_add_payments_returns`.
+Customers, Orders, Payments, Returns y Logistics. Hay once migraciones
+aplicadas; la última es `20260822234617_add_logistics`.
 
 ```mermaid
 erDiagram
@@ -29,6 +28,9 @@ erDiagram
   Organization ||--o{ PaymentRefund : owns
   Organization ||--o{ OrderReturn : owns
   Organization ||--o{ OrderReturnItem : owns
+  Organization ||--o{ Shipment : owns
+  Organization ||--o{ ShipmentItem : owns
+  Organization ||--o{ ShipmentStatusHistory : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -53,6 +55,10 @@ erDiagram
   Order ||--o{ OrderReturn : returns
   OrderReturn ||--|{ OrderReturnItem : contains
   OrderItem ||--o{ OrderReturnItem : returned_as
+  Order ||--o{ Shipment : fulfills
+  Shipment ||--|{ ShipmentItem : contains
+  OrderItem ||--o{ ShipmentItem : allocated_to
+  Shipment ||--o{ ShipmentStatusHistory : records
   ProductVariant ||--o{ OrderItem : snapshots
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
@@ -247,6 +253,35 @@ erDiagram
     int quantity
     boolean restocked
   }
+  Shipment {
+    string id PK
+    string organizationId FK
+    string orderId FK
+    string number
+    enum type
+    enum status
+    decimal customerChargeAmount
+    decimal actualCostAmount
+    string trackingNumber
+    string idempotencyKey
+  }
+  ShipmentItem {
+    string id PK
+    string organizationId FK
+    string shipmentId FK
+    string orderItemId FK
+    int quantity
+  }
+  ShipmentStatusHistory {
+    string id PK
+    string organizationId FK
+    string shipmentId FK
+    enum status
+    string reason
+    string trackingNumber
+    decimal actualCostAmount
+    string actorUserId FK
+  }
 ```
 
 ## Organization
@@ -373,11 +408,28 @@ Cuando `restocked=true`, se bloquea el `InventoryBalance` original asociado a la
 reserva consumida, se aumenta físico y se inserta un movimiento `RETURN` en la
 misma transacción. La devolución comercial y el reembolso permanecen separados.
 
+## Logistics
+
+`Shipment` referencia un pedido/tenant y conserva tipo, estado, cobro asignado,
+costo real, carrier/servicio, tracking, notas, timestamps e idempotencia. Tipos:
+`PICKUP`, `OWN_DELIVERY`, `MARKETPLACE`, `EXTERNAL_COURIER`; estados:
+`PENDING`, `READY`, `IN_TRANSIT`, `DELIVERED`, `CANCELLED`.
+
+Checks exigen moneda CLP, importes no negativos, costo real al entregar,
+metadatos coherentes con retiro/courier y timestamps compatibles con el estado.
+El tracking es único por organización/carrier cuando existe. La huella interna
+es SHA-256 y la clave idempotente es única por tenant.
+
+`ShipmentItem` asigna cantidades de `OrderItem`; el servicio bloquea el pedido y
+suma asignaciones no canceladas para permitir fulfillment parcial sin exceso.
+Aplica el mismo lock al cobro logístico: su suma activa no supera lo cobrado en
+el pedido. `ShipmentStatusHistory` guarda estado, motivo, actor y snapshots de
+tracking/costo real en cada transición.
+
 ## Estrategia prevista
 
 - Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
   al catálogo para pesos CLP exactos; nunca `Float`.
-- Envíos: entidades separadas del pedido y de su costo cobrado al cliente.
 - Integraciones: constraints de idempotencia por canal/proveedor y referencia.
 
 Las secciones previstas no representan tablas implementadas todavía. Cada hito

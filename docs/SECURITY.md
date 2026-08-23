@@ -26,6 +26,8 @@
 - Pagos/reembolsos/devoluciones requieren permisos `payments.*`/`returns.*`.
   Claves idempotentes y referencias externas se conservan, pero la huella
   SHA-256 interna nunca se expone; no se almacenan datos de tarjeta.
+- Logistics exige permisos `shipments.*`; tracking y snapshots de historial se
+  limitan al tenant y la huella idempotente tampoco se expone.
 
 ## Riesgos pendientes
 

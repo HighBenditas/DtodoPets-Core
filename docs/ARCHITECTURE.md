@@ -41,6 +41,8 @@ no componentes ya implementados.
   el saldo neto mediante lock del pedido.
 - `ReturnsModule` limita devoluciones parciales por item y reintegra stock de
   forma opcional mediante el ledger de inventario.
+- `ShipmentsModule` separa fulfillment del pedido, asigna items/cobro bajo lock
+  y conserva costos reales, tracking e historial de estados.
 - No existen frontend, eventos ni adaptadores todavía.
 
 ## Límites previstos

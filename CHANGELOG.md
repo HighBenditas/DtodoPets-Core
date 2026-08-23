@@ -54,6 +54,12 @@ estructura inspirada en Keep a Changelog.
   pagos, saldo neto, reintegro opcional y huella SHA-256 de idempotencia.
 - Cobertura ampliada a 81 unit tests en 22 suites y smoke HTTP real de cobro,
   reembolso parcial/completo y devolución con/sin reintegro de stock.
+- Migración `add_logistics` con shipments/items, tipos de fulfillment, costos
+  reales/cobrados, tracking, timestamps e historial de estados.
+- API Logistics idempotente con múltiples envíos por pedido, asignación segura
+  de cantidades/cobro, cancelación liberadora y cálculo de subsidio/margen.
+- Cobertura ampliada a 87 unit tests en 23 suites y smoke HTTP real de courier,
+  despacho propio, retiro, tracking y cuatro shipments fraccionados.
 
 ### Changed
 

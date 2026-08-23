@@ -59,12 +59,12 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Devoluciones parciales y reintegro opcional de stock.
 - ✅ Idempotencia para proveedores de pago y devoluciones.
 
-## 🟡 FASE 8 — Logistics
+## ✅ FASE 8 — Logistics
 
-- Shipments desacoplados, métodos, tracking y costos reales/subsidios.
-- Retiro, despacho propio, marketplace y courier externo.
+- ✅ Shipments desacoplados, métodos, tracking y costos reales/subsidios.
+- ✅ Retiro, despacho propio, marketplace y courier externo.
 
-## ⬜ FASE 9 — Sales Channels & Integrations
+## 🟡 FASE 9 — Sales Channels & Integrations
 
 - SalesChannel, Integration y ExternalReference.
 - Credenciales protegidas, webhooks e idempotencia reutilizable.
