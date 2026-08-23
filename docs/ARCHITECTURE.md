@@ -47,6 +47,11 @@ no componentes ya implementados.
   deduplicación de webhooks y una outbox transaccional.
 - `MercadoLibreModule` es el primer adaptador: traduce IDs externos a variantes,
   reutiliza `OrdersService`, valida el origen y entrega trabajo durable a la outbox.
+- `PromotionsModule` administra definiciones tenant-safe y expone el motor puro
+  de precios CLP para promociones automáticas/cupones.
+- `StorefrontModule` es el boundary HTTP público: selecciona únicamente datos
+  publicables, protege carritos con token opaco y delega creación/reserva del
+  pedido a `OrdersService` mediante hooks dentro de la misma transacción.
 - No existen frontend ni workers de publicación/reintento todavía.
 
 ## Límites previstos
@@ -89,6 +94,20 @@ request el guard verifica firma/expiración y vuelve a cargar sesión, estado de
 usuario/organización, roles y permisos desde PostgreSQL. Así logout,
 desactivación o cambios RBAC tienen efecto sin esperar al vencimiento del JWT.
 Los refresh tokens son aleatorios, se guardan hasheados y rotan atómicamente.
+
+## Boundary público de Storefront
+
+El slug del tenant y la key de un canal `OWN_STOREFRONT` seleccionan una tienda,
+pero nunca autorizan superficies administrativas. Catálogo/promociones usan
+selects públicos; un carrito requiere además su secreto bearer, del cual solo se
+persiste SHA-256. El checkout toma precios e inventario autoritativos del core.
+
+`StorefrontService` prepara cliente, dirección, promoción y bodega; luego
+`OrdersService` ejecuta un solo commit que bloquea carrito/saldos y crea pedido,
+items, reservas, movimiento, historial, redención y evento. El ID de carrito y
+una huella canónica hacen que PostgreSQL resuelva carreras/reintentos sin doble
+venta. Esto mantiene una sola regla de creación de pedidos para venta
+administrativa, marketplaces y tienda propia.
 
 ## Decisiones y tradeoffs
 

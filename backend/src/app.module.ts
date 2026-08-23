@@ -12,12 +12,14 @@ import { MercadoLibreModule } from './mercado-libre/mercado-libre.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
+import { PromotionsModule } from './promotions/promotions.module';
 import { ReturnsModule } from './returns/returns.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
+import { StorefrontModule } from './storefront/storefront.module';
 
 @Module({
   imports: [
@@ -33,8 +35,10 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     OrganizationsModule,
     OrdersModule,
     PaymentsModule,
+    PromotionsModule,
     ReturnsModule,
     ShipmentsModule,
+    StorefrontModule,
     RolesModule,
     UsersModule,
     WarehousesModule,

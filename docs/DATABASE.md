@@ -3,9 +3,9 @@
 ## Estado real
 
 PostgreSQL 18 contiene Foundation, Identity, Locations, Catalog, Inventory,
-Customers, Orders, Payments, Returns, Logistics, Integrations y Mercado Libre.
-Hay quince migraciones aplicadas; la última es
-`20260823002200_fix_order_source_pair_constraint`.
+Customers, Orders, Payments, Returns, Logistics, Integrations, Mercado Libre,
+Promotions y Storefront. Hay dieciséis migraciones aplicadas; la última es
+`20260823004000_add_storefront_promotions`.
 
 ```mermaid
 erDiagram
@@ -38,6 +38,9 @@ erDiagram
   Organization ||--o{ WebhookReceipt : owns
   Organization ||--o{ DomainEvent : owns
   Organization ||--o{ MercadoLibreListing : owns
+  Organization ||--o{ Promotion : owns
+  Organization ||--o{ Cart : owns
+  Organization ||--o{ PromotionRedemption : owns
   Location ||--o{ Warehouse : contains
   Brand ||--o{ Product : labels
   Category ||--o{ Category : parent
@@ -74,6 +77,15 @@ erDiagram
   Integration ||--o{ MercadoLibreListing : maps
   Integration ||--o{ Order : imports
   ProductVariant ||--o{ MercadoLibreListing : publishes
+  SalesChannel ||--o{ Promotion : scopes
+  SalesChannel ||--o{ Cart : receives
+  Promotion ||--o{ PromotionVariant : targets
+  ProductVariant ||--o{ PromotionVariant : eligible
+  Cart ||--o{ CartItem : contains
+  ProductVariant ||--o{ CartItem : selected
+  Cart ||--o| Order : checks_out_as
+  Promotion ||--o{ PromotionRedemption : redeems
+  Order ||--o{ PromotionRedemption : records
   User ||--o{ AuthSession : owns
   User ||--o{ UserRole : assigned
   Role ||--o{ UserRole : grants
@@ -214,6 +226,7 @@ erDiagram
     string sourceIntegrationId FK
     string externalOrderId
     string sourceRequestHash
+    string storefrontCartId FK
   }
   OrderItem {
     string id PK
@@ -344,6 +357,48 @@ erDiagram
     decimal listingPriceAmount
     decimal feeAmount
     int availableQuantity
+  }
+  Promotion {
+    string id PK
+    string organizationId FK
+    string salesChannelId FK
+    string code
+    boolean automatic
+    enum type
+    enum scope
+    int value
+    decimal minimumSubtotalAmount
+    decimal maximumDiscountAmount
+  }
+  PromotionVariant {
+    string id PK
+    string promotionId FK
+    string variantId FK
+  }
+  Cart {
+    string id PK
+    string organizationId FK
+    string salesChannelId FK
+    string promotionId FK
+    enum status
+    string accessTokenHash UK
+    string checkoutRequestHash
+    int version
+    datetime expiresAt
+  }
+  CartItem {
+    string id PK
+    string cartId FK
+    string variantId FK
+    int quantity
+  }
+  PromotionRedemption {
+    string id PK
+    string promotionId FK
+    string orderId FK
+    string customerId FK
+    decimal discountAmount
+    string nameSnapshot
   }
 ```
 
@@ -519,10 +574,29 @@ al mismo tenant. Checks prohíben IDs en blanco, cantidades/importes negativos y
 otra moneda. La importación crea `ExternalReference(ORDER)` y un `DomainEvent`
 durable; el webhook crea recibo/evento atómicamente.
 
+## Promotions y Storefront
+
+`Promotion` conserva tipo, alcance, valor, vigencia, prioridad, mínimo/tope CLP,
+modo automático/cupón y canal propio opcional. `PromotionVariant` materializa el
+alcance selectivo. Unicidades y FKs compuestas impiden códigos duplicados o
+variantes/canales cruzados; checks validan modo, porcentaje, importes y fechas.
+
+`Cart` pertenece a un `SalesChannel`, guarda solo `accessTokenHash`, versión,
+estado, expiración y la huella de checkout una vez finalizado. `CartItem` exige
+cantidad positiva y variante del mismo tenant. Los checks distinguen estados
+`ACTIVE`, `CHECKED_OUT`, `ABANDONED` y `EXPIRED`; un activo no tiene cliente ni
+huella y uno finalizado exige cliente, huella SHA-256 y timestamp.
+
+`Order.storefrontCartId` es único por organización y mutuamente excluyente con
+el origen integración/ID externo. `PromotionRedemption` enlaza promoción,
+cliente y orden del mismo tenant y congela nombre, código, tipo, valor, moneda y
+descuento. Pedido, reserva, redención y cierre se confirman en una transacción;
+la base evita que dos carreras creen dos órdenes para un carrito.
+
 ## Estrategia prevista
 
-- Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` ya aplicado
-  al catálogo para pesos CLP exactos; nunca `Float`.
+- Dinero de los próximos dominios seguirá el patrón `Decimal(14,0)` aplicado a
+  catálogo, pedidos y promociones para pesos CLP exactos; nunca `Float`.
 - Nuevos adaptadores reutilizarán referencias, recibos y outbox existentes.
 
 Las secciones previstas no representan tablas implementadas todavía. Cada hito

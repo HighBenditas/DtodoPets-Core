@@ -133,6 +133,23 @@ describe('OrdersService', () => {
     expect(prisma.customer.findFirst).not.toHaveBeenCalled();
   });
 
+  it('rejects an incomplete storefront source before querying references', async () => {
+    await expect(
+      service.create(
+        'org-a',
+        'user-a',
+        {
+          customerAddressId: 'address-a',
+          customerId: 'customer-a',
+          items: [{ quantity: 1, variantId: 'variant-a' }],
+          warehouseId: 'warehouse-a',
+        },
+        { requestHash: 'a'.repeat(64), storefrontCartId: '' },
+      ),
+    ).rejects.toThrow('Order source context is invalid');
+    expect(prisma.customer.findFirst).not.toHaveBeenCalled();
+  });
+
   it('calculates exact totals and reserves inventory in the order transaction', async () => {
     const transaction = transactionMock();
     let orderData: Prisma.OrderUncheckedCreateInput | undefined;
@@ -177,14 +194,22 @@ describe('OrdersService', () => {
         callback(transaction),
     );
 
-    await service.create('org-a', 'user-a', {
-      customerAddressId: 'address-a',
-      customerId: 'customer-a',
-      discountAmount: 200,
-      items: [{ discountAmount: 100, quantity: 2, variantId: 'variant-a' }],
-      shippingAmount: 500,
-      warehouseId: 'warehouse-a',
-    });
+    const beforeCreate = jest.fn().mockResolvedValue(undefined);
+    const afterCreate = jest.fn().mockResolvedValue(undefined);
+    await service.create(
+      'org-a',
+      'user-a',
+      {
+        customerAddressId: 'address-a',
+        customerId: 'customer-a',
+        discountAmount: 200,
+        items: [{ discountAmount: 100, quantity: 2, variantId: 'variant-a' }],
+        shippingAmount: 500,
+        warehouseId: 'warehouse-a',
+      },
+      { requestHash: 'a'.repeat(64), storefrontCartId: 'cart-a' },
+      { afterCreate, beforeCreate },
+    );
 
     expect(orderData).toMatchObject({
       createdByUserId: 'user-a',
@@ -192,9 +217,13 @@ describe('OrdersService', () => {
       discountAmount: new Prisma.Decimal(300),
       organizationId: 'org-a',
       shippingAmount: new Prisma.Decimal(500),
+      sourceRequestHash: 'a'.repeat(64),
+      storefrontCartId: 'cart-a',
       subtotalAmount: new Prisma.Decimal(2000),
       totalAmount: new Prisma.Decimal(2200),
     });
+    expect(beforeCreate).toHaveBeenCalledWith(transaction);
+    expect(afterCreate).toHaveBeenCalledWith(transaction, 'order-a');
     expect(transaction.inventoryBalance.update).toHaveBeenCalledWith({
       data: { reservedQuantity: 2 },
       where: { id: 'balance-a' },

@@ -7,21 +7,21 @@ Actualizado: 2026-08-22.
 DTodoPets Core tiene un backend NestJS 11 con Prisma 7, foundation HTTP,
 Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
 pagos, devoluciones, logística, canales e integraciones multi-tenant. PostgreSQL
-y Redis funcionan en Docker. El adaptador inicial de Mercado Libre ya mapea
-variantes, importa pedidos y valida el origen de webhooks. El siguiente dominio es
-Storefront & Promotions; aún no existe frontend.
+y Redis funcionan en Docker. Mercado Libre ya mapea/importa y el storefront
+público ofrece catálogo, promociones, carrito y checkout idempotente sin
+frontend. El siguiente dominio es Analytics & Audit.
 
 ## Último hito completado
 
-FASE 10 — Mercado Libre.
+FASE 11 — Storefront & Promotions.
 
 ## Hito actual
 
-FASE 11 — Storefront & Promotions.
+FASE 12 — Analytics & Audit.
 
 ## Próximo hito
 
-FASE 12 — Analytics & Audit.
+FASE 13 — Admin Web.
 
 ## Funcionalidades terminadas
 
@@ -110,11 +110,22 @@ FASE 12 — Analytics & Audit.
   únicas; referencias/eventos faltantes se reparan sin duplicar el evento.
 - 96 unit tests en 25 suites y 6 e2e correctos; smoke HTTP real de Mercado Libre
   aprobó mapping, CLP, reserva única, conflictos, allowlist y eventos internos.
+- Catálogo storefront público con selects explícitos: publica disponibilidad
+  agregada, pero nunca costos, bodega ni saldos físico/reservado.
+- Promociones automáticas o por cupón, globales o por variantes, con vigencia,
+  mínimo, tope, prioridad, alcance por canal y redención histórica auditable.
+- Carritos con expiración, versión y token aleatorio entregado una sola vez; en
+  PostgreSQL solo queda su hash SHA-256 y un token incorrecto no revela el ID.
+- Checkout guest reutiliza `OrdersService`: selecciona una bodega capaz de
+  completar todo, reserva inventario y persiste orden, redención, cierre y evento
+  outbox en la misma transacción; el replay igual no duplica y uno distinto da 409.
+- 110 unit tests en 28 suites y 6 e2e correctos; smoke HTTP real aprobó catálogo
+  sanitizado, descuento exacto de 1.499 CLP, una reserva y replay idempotente.
 
 ## Funcionalidades pendientes
 
-- Promociones, catálogo público, carrito y checkout de storefront.
-- Workers de outbox, reportes, auditoría, frontend y hardening de producción.
+- Audit log administrativo, KPIs/reportes e indexación medida.
+- Workers de outbox, frontend y hardening de producción.
 
 ## Problemas conocidos
 
@@ -148,6 +159,12 @@ FASE 12 — Analytics & Audit.
   no duplicar pedidos ni inventario; el origen se valida antes de persistir.
 - `@Public()` omite tanto JWT como permisos heredados; las rutas administrativas
   siguen denegadas por defecto y requieren `integrations.manage`.
+- Un `SalesChannel` `OWN_STOREFRONT` configura TTL/envío y delimita el contrato
+  público mediante slug de organización y key de canal.
+- El token de carrito es bearer opaco hasheado; el checkout liga una única orden
+  al carrito y su huella incluye payload normalizado más versión.
+- Promociones se calculan en enteros CLP y solo se conserva la mejor automática;
+  cupones se eligen explícitamente y una redención congela sus datos comerciales.
 
 ## Migraciones actuales
 
@@ -168,9 +185,10 @@ FASE 12 — Analytics & Audit.
 | `20260823002000_add_mercado_libre` | Aplicada | Mapping de listings y origen externo único de pedidos |
 | `20260823002100_add_order_source_request_hash` | Aplicada | Huella canónica obligatoria para pedidos externos |
 | `20260823002200_fix_order_source_pair_constraint` | Aplicada | Trío de origen externo explícitamente completo o nulo |
+| `20260823004000_add_storefront_promotions` | Aplicada | Promociones, carritos, redenciones y origen storefront de pedidos |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
-tests: una organización, dos usuarios, seis roles, treinta y un permisos, una
+tests: una organización, dos usuarios, seis roles, treinta y tres permisos, una
 sucursal, tres bodegas, una marca, una categoría, un producto, una variante, una
 imagen, dos saldos de inventario y movimientos/reservas liberadas del smoke.
 También contiene un cliente ficticio con dos direcciones y dos pedidos del
@@ -185,6 +203,9 @@ recibo webhook y los eventos de listing, importación y webhook. Las pruebas fin
 agregaron dos recibos con contrato real y origen local permitido. El primer flujo se
 detuvo al detectar el antiguo 403 del guard público y se conservó para no borrar
 datos ni reservas existentes.
+El smoke de Storefront agregó un canal propio, un cupón, un carrito finalizado,
+una redención, un pedido `PENDING`, una reserva y el evento de checkout; el replay
+no creó una segunda orden ni incrementó otra vez el reservado.
 
 ## Comandos útiles
 
@@ -209,6 +230,6 @@ documentos.
 
 ## NEXT ACTION
 
-Implementar Storefront & Promotions: separar un contrato público de catálogo y
-disponibilidad, modelar promociones auditables y preparar carrito/checkout sin
-exponer costos, secretos ni superficies administrativas.
+Implementar Analytics & Audit: definir un `AuditLog` seguro para mutaciones
+administrativas y KPIs/reportes tenant-safe basados en datos transaccionales
+reales, con paginación, permisos e índices medidos antes de optimizar.

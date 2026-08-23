@@ -45,6 +45,11 @@ model Organization {
   webhookReceipts       WebhookReceipt[]
   domainEvents          DomainEvent[]
   mercadoLibreListings  MercadoLibreListing[]
+  promotions            Promotion[]
+  promotionVariants     PromotionVariant[]
+  carts                 Cart[]
+  cartItems             CartItem[]
+  promotionRedemptions  PromotionRedemption[]
 }
 
 model Brand {
@@ -133,6 +138,8 @@ model ProductVariant {
   inventoryBalances    InventoryBalance[]
   orderItems           OrderItem[]
   mercadoLibreListings MercadoLibreListing[]
+  promotionVariants    PromotionVariant[]
+  cartItems            CartItem[]
 
   @@unique([organizationId, sku])
   @@unique([organizationId, barcode])
@@ -266,9 +273,11 @@ model Customer {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  addresses    CustomerAddress[]
-  orders       Order[]
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  addresses            CustomerAddress[]
+  orders               Order[]
+  carts                Cart[]
+  promotionRedemptions PromotionRedemption[]
 
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
@@ -375,6 +384,7 @@ model User {
   createdSalesChannels          SalesChannel[]          @relation("SalesChannelCreator")
   createdIntegrations           Integration[]           @relation("IntegrationCreator")
   createdExternalReferences     ExternalReference[]     @relation("ExternalReferenceCreator")
+  createdPromotions             Promotion[]             @relation("PromotionCreator")
 
   @@unique([organizationId, email])
   @@unique([id, organizationId])
@@ -474,6 +484,7 @@ model Order {
   sourceIntegrationId String?
   externalOrderId     String?
   sourceRequestHash   String?
+  storefrontCartId    String?
   createdByUserId     String
   confirmedAt         DateTime?
   cancelledAt         DateTime?
@@ -481,20 +492,23 @@ model Order {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
-  organization      Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  customer          Customer             @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  customerAddress   CustomerAddress      @relation(fields: [customerAddressId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  warehouse         Warehouse            @relation(fields: [warehouseId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  createdBy         User                 @relation("OrderCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  items             OrderItem[]
-  statusHistory     OrderStatusHistory[]
-  payments          Payment[]
-  returns           OrderReturn[]
-  shipments         Shipment[]
-  sourceIntegration Integration?         @relation("OrderSourceIntegration", fields: [sourceIntegrationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer             Customer              @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customerAddress      CustomerAddress       @relation(fields: [customerAddressId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  warehouse            Warehouse             @relation(fields: [warehouseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy            User                  @relation("OrderCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  items                OrderItem[]
+  statusHistory        OrderStatusHistory[]
+  payments             Payment[]
+  returns              OrderReturn[]
+  shipments            Shipment[]
+  sourceIntegration    Integration?          @relation("OrderSourceIntegration", fields: [sourceIntegrationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  storefrontCart       Cart?                 @relation(fields: [storefrontCartId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  promotionRedemptions PromotionRedemption[]
 
   @@unique([organizationId, number])
   @@unique([sourceIntegrationId, externalOrderId])
+  @@unique([storefrontCartId, organizationId])
   @@unique([id, organizationId])
   @@index([organizationId, status, createdAt])
   @@index([customerId, createdAt])
@@ -794,6 +808,8 @@ model SalesChannel {
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   createdBy    User          @relation("SalesChannelCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
   integrations Integration[]
+  promotions   Promotion[]
+  carts        Cart[]
 
   @@unique([organizationId, key])
   @@unique([id, organizationId])
@@ -934,4 +950,146 @@ model MercadoLibreListing {
   @@unique([id, organizationId])
   @@index([organizationId, status, updatedAt])
   @@index([variantId])
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PromotionScope {
+  ALL_CATALOG
+  VARIANTS
+}
+
+enum CartStatus {
+  ACTIVE
+  CHECKED_OUT
+  ABANDONED
+  EXPIRED
+}
+
+model Promotion {
+  id                    String         @id @default(uuid())
+  organizationId        String
+  salesChannelId        String?
+  name                  String
+  description           String?
+  code                  String?
+  automatic             Boolean        @default(false)
+  type                  PromotionType
+  scope                 PromotionScope @default(ALL_CATALOG)
+  value                 Int
+  minimumSubtotalAmount Decimal        @default(0) @db.Decimal(14, 0)
+  maximumDiscountAmount Decimal?       @db.Decimal(14, 0)
+  priority              Int            @default(0)
+  active                Boolean        @default(true)
+  startsAt              DateTime
+  endsAt                DateTime?
+  createdByUserId       String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  salesChannel SalesChannel?         @relation(fields: [salesChannelId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User                  @relation("PromotionCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  variants     PromotionVariant[]
+  carts        Cart[]
+  redemptions  PromotionRedemption[]
+
+  @@unique([organizationId, code])
+  @@unique([id, organizationId])
+  @@index([organizationId, active, startsAt, endsAt])
+  @@index([salesChannelId, active])
+}
+
+model PromotionVariant {
+  id             String   @id @default(uuid())
+  organizationId String
+  promotionId    String
+  variantId      String
+  createdAt      DateTime @default(now())
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  promotion    Promotion      @relation(fields: [promotionId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  variant      ProductVariant @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([promotionId, variantId])
+  @@unique([id, organizationId])
+  @@index([organizationId, variantId])
+}
+
+model Cart {
+  id                  String     @id @default(uuid())
+  organizationId      String
+  salesChannelId      String
+  promotionId         String?
+  customerId          String?
+  status              CartStatus @default(ACTIVE)
+  currency            String     @default("CLP")
+  accessTokenHash     String     @unique
+  checkoutRequestHash String?
+  version             Int        @default(0)
+  expiresAt           DateTime
+  checkedOutAt        DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  salesChannel SalesChannel @relation(fields: [salesChannelId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  promotion    Promotion?   @relation(fields: [promotionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customer     Customer?    @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  items        CartItem[]
+  order        Order?
+
+  @@unique([id, organizationId])
+  @@index([organizationId, status, expiresAt])
+  @@index([salesChannelId, status, updatedAt])
+  @@index([promotionId])
+  @@index([customerId])
+}
+
+model CartItem {
+  id             String   @id @default(uuid())
+  organizationId String
+  cartId         String
+  variantId      String
+  quantity       Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  cart         Cart           @relation(fields: [cartId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  variant      ProductVariant @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([cartId, variantId])
+  @@unique([id, organizationId])
+  @@index([organizationId, updatedAt])
+  @@index([variantId])
+}
+
+model PromotionRedemption {
+  id             String        @id @default(uuid())
+  organizationId String
+  promotionId    String
+  orderId        String
+  customerId     String
+  nameSnapshot   String
+  codeSnapshot   String?
+  typeSnapshot   PromotionType
+  valueSnapshot  Int
+  currency       String        @default("CLP")
+  discountAmount Decimal       @db.Decimal(14, 0)
+  createdAt      DateTime      @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  promotion    Promotion    @relation(fields: [promotionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  order        Order        @relation(fields: [orderId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customer     Customer     @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([promotionId, orderId])
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([orderId])
+  @@index([customerId, createdAt])
 }

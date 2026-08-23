@@ -2,10 +2,10 @@
 
 ## Estado actual
 
-- 96 unit tests en 25 suites para configuración, health, Organization, password,
+- 110 unit tests en 28 suites para configuración, health, Organization, password,
   login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo,
   inventario, clientes, pedidos, pagos, devoluciones, shipments, integraciones y
-  Mercado Libre.
+  Mercado Libre, promociones y storefront.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
@@ -36,6 +36,9 @@
 - Smoke HTTP real de Mercado Libre: mapping con importes CLP exactos, orden con
   una sola reserva tras replay, ID/payload distinto 409, origen permitido 200 en
   20 ms, vendedor distinto 401 y eventos outbox de listing/orden/webhook.
+- Smoke HTTP real de Storefront: catálogo sin costo/físico/reservado/bodega,
+  token ausente o erróneo 404, cupón 10% exacto (1.499 CLP), checkout `PENDING`,
+  una sola reserva/redención/evento, replay idéntico y payload cambiado 409.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia
@@ -57,6 +60,8 @@ identifique explícitamente un entorno de test.
 - Ajustes/reservas y falta de stock.
 - Creación, confirmación y cancelación atómica de pedidos.
 - Canales, referencias externas, webhooks e idempotencia de integraciones.
+- Catálogo público, token de carrito, promociones, checkout y replay sin doble
+  orden/reserva/redención.
 
 ## Comandos
 

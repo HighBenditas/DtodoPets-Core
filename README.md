@@ -10,8 +10,9 @@ queda disponible para capacidades que lo necesiten más adelante.
 Foundation, Identity, Locations, Catalog, Inventory, Customers y Orders están
 implementados, junto con pagos, devoluciones y logística fraccionable. El
 detalle de cliente proyecta historial y gasto desde pedidos
-confirmados/completados. Canales, outbox y el adaptador inicial de Mercado Libre
-también están operativos. El hito activo es Storefront & Promotions. Consulta
+confirmados/completados. Canales, outbox, el adaptador inicial de Mercado Libre
+y el backend público de storefront con promociones/carrito/checkout también
+están operativos. El hito activo es Analytics & Audit. Consulta
 [el estado del proyecto](docs/PROJECT_STATUS.md) y
 [el roadmap](docs/ROADMAP.md) antes de comenzar una tarea.
 

@@ -79,9 +79,18 @@ interface PreparedItem {
 }
 
 export interface OrderSourceContext {
-  externalOrderId: string;
-  integrationId: string;
+  externalOrderId?: string;
+  integrationId?: string;
   requestHash: string;
+  storefrontCartId?: string;
+}
+
+export interface OrderCreationHooks {
+  afterCreate?: (
+    transaction: Prisma.TransactionClient,
+    orderId: string,
+  ) => Promise<void>;
+  beforeCreate?: (transaction: Prisma.TransactionClient) => Promise<void>;
 }
 
 @Injectable()
@@ -135,7 +144,9 @@ export class OrdersService {
     actorUserId: string,
     dto: CreateOrderDto,
     source?: OrderSourceContext,
+    hooks?: OrderCreationHooks,
   ) {
+    validateOrderSource(source);
     validateUniqueVariants(dto.items.map(({ variantId }) => variantId));
     const customer = await this.prisma.customer.findFirst({
       where: { active: true, id: dto.customerId, organizationId },
@@ -254,6 +265,7 @@ export class OrdersService {
     const operationId = randomUUID();
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        await hooks?.beforeCreate?.(transaction);
         const lockedBalances = await lockBalances(
           transaction,
           organizationId,
@@ -279,6 +291,7 @@ export class OrdersService {
             sourceIntegrationId: source?.integrationId,
             externalOrderId: source?.externalOrderId,
             sourceRequestHash: source?.requestHash,
+            storefrontCartId: source?.storefrontCartId,
             shippingAmount: toClpDecimal(shippingAmount),
             shippingSnapshot: addressSnapshot(address),
             subtotalAmount: toClpDecimal(subtotalAmount),
@@ -352,6 +365,7 @@ export class OrdersService {
             status: OrderStatus.PENDING,
           },
         });
+        await hooks?.afterCreate?.(transaction, order.id);
         return getOrderOrThrow(transaction, order.id);
       });
     } catch (error) {
@@ -723,5 +737,21 @@ function throwOrderConflict(error: unknown) {
     error.code === 'P2002'
   ) {
     throw new ConflictException('Order number or reference is already in use');
+  }
+}
+
+function validateOrderSource(source: OrderSourceContext | undefined) {
+  if (!source) return;
+  const integrationSource = Boolean(
+    source.integrationId && source.externalOrderId && !source.storefrontCartId,
+  );
+  const storefrontSource = Boolean(
+    source.storefrontCartId && !source.integrationId && !source.externalOrderId,
+  );
+  if (
+    (!integrationSource && !storefrontSource) ||
+    !/^[0-9a-f]{64}$/.test(source.requestHash)
+  ) {
+    throw new BadRequestException('Order source context is invalid');
   }
 }

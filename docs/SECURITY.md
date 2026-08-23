@@ -37,6 +37,14 @@
   de las respuestas; las credenciales solo se descifran dentro del adaptador.
 - `@Public()` omite coherentemente JWT y RBAC heredado. Debe usarse solo cuando
   exista otro control explícito, como la allowlist del webhook.
+- El storefront público usa selects allowlist que omiten costo, saldos internos,
+  bodegas, credenciales y superficies administrativas. Su tenant se resuelve por
+  organización/canal activos, no desde un `organizationId` del body.
+- El acceso a carrito es un secreto bearer de 256 bits; solo se guarda SHA-256,
+  se limita el largo del header y un fallo siempre responde 404. La huella de
+  checkout tampoco se expone.
+- Checkout valida DTOs anidados, normaliza PII, revalida stock/precios y usa
+  unicidad/locks para no duplicar pedido, reserva ni redención bajo reintentos.
 
 ## Riesgos pendientes
 
@@ -53,6 +61,9 @@
   backend actual usa la IP directa y no confía en `X-Forwarded-For`.
 - El worker de outbox deberá validar `resource` y consultar la API de Mercado
   Libre antes de aplicar el payload de una notificación al estado del negocio.
+- Antes de publicar el storefront se requiere rate limiting/WAF para creación y
+  mutación de carritos, política antiabuso del checkout y controles operativos de
+  retención de carritos/PII guest.
 
 ## Reporte y revisión
 

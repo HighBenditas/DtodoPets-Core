@@ -166,6 +166,34 @@ roadmap.
 - La ruta webhook es pública solo respecto del Bearer/RBAC; el origen se limita
   por allowlist. Las demás rutas exigen `integrations.manage`.
 
+### Promotions y Storefront
+
+- Solo un canal activo `OWN_STOREFRONT` de una organización activa publica una
+  tienda; slug/key inválidos o de otro tenant responden 404.
+- El catálogo público usa un contrato explícito. Disponibilidad es la suma
+  `physical-reserved` de bodegas activas, pero nunca se publican costo, físico,
+  reservado, bodega, credenciales ni metadatos administrativos.
+- Una promoción es automática sin código o cupón con código; no admite ambos.
+  Puede cubrir todo el catálogo o una lista no vacía de variantes activas del
+  tenant y, opcionalmente, un único canal storefront del mismo tenant.
+- Porcentaje está entre 1 y 100; monto fijo, mínimos, topes y resultados usan
+  enteros CLP dentro de `Decimal(14,0)`. Vigencia usa inicio inclusivo y fin
+  exclusivo. Sin cupón se aplica solo la automática de mayor descuento; prioridad
+  decide empates.
+- Crear carrito entrega un secreto aleatorio una vez y persiste únicamente su
+  SHA-256. Faltar o errar el token responde 404 para no confirmar existencia.
+- Mutaciones del carrito bloquean su fila, exigen estado activo/no vencido e
+  incrementan versión cuando cambian items o cupón.
+- Agregar un item exige variante/producto activos y disponibilidad agregada;
+  checkout exige además una sola bodega capaz de completar todas las líneas.
+- Checkout normaliza cliente, teléfono y dirección, toma precios actuales del
+  catálogo y crea una orden `PENDING` mediante la misma regla central de Orders.
+- La huella incluye ID/versión del carrito y payload normalizado. El mismo replay
+  devuelve la orden existente; otro payload o versión responde 409.
+- Pedido, reserva, historial, redención, estado `CHECKED_OUT` y evento outbox se
+  escriben atómicamente. Una redención conserva snapshots y el carrito finalizado
+  muestra los importes históricos de la orden.
+
 ## Comprometidas para próximos hitos
 
 ### Multi-tenancy

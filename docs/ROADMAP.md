@@ -76,12 +76,14 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 - ✅ Importación de pedidos idempotente por ID externo y huella canónica.
 - ✅ Verificación de origen de webhooks, deduplicación y outbox reintentable.
 
-## 🟡 FASE 11 — Storefront & Promotions
+## ✅ FASE 11 — Storefront & Promotions
 
-- API pública sin costos ni información administrativa.
-- Catálogo, disponibilidad, carrito, checkout y promociones auditables.
+- ✅ API pública tenant-safe sin costos, saldos internos ni información
+  administrativa.
+- ✅ Catálogo/disponibilidad, carrito con token opaco y checkout idempotente.
+- ✅ Promociones automáticas/cupones con alcance, vigencia y redención auditable.
 
-## ⬜ FASE 12 — Analytics & Audit
+## 🟡 FASE 12 — Analytics & Audit
 
 - AuditLog seguro para acciones administrativas.
 - KPIs reales, reportes paginados y consultas/indexación medidas.

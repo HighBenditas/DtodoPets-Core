@@ -70,6 +70,16 @@ estructura inspirada en Keep a Changelog.
   pedidos sin doble reserva y webhooks con allowlist IP deduplicados por outbox.
 - Cobertura ampliada a 96 tests en 25 suites y smoke HTTP real de mapping,
   replays, conflictos de payload, origen permitido/rechazado y eventos internos.
+- Migración `add_storefront_promotions` con promociones, alcance por variantes,
+  carritos tokenizados, items, redenciones y origen storefront único de pedidos.
+- `PromotionsModule` administrativo con permisos separados, cupones/promociones
+  automáticas, vigencia, prioridad y cálculos CLP enteros auditables.
+- `StorefrontModule` público con catálogo sanitizado, disponibilidad agregada,
+  carrito de token opaco y checkout guest sobre la transacción de pedidos.
+- Checkout idempotente por huella canónica y versión del carrito: pedido,
+  reserva, redención, cierre del carrito y evento outbox se confirman juntos.
+- Cobertura ampliada a 110 tests en 28 suites, 6 e2e y smoke HTTP real de
+  catálogo seguro, cupón, reserva única y replays iguales/distintos.
 
 ### Changed
 
@@ -78,6 +88,8 @@ estructura inspirada en Keep a Changelog.
   evitar el uso concurrente de una conexión, compatible con el próximo `pg@9`.
 - Los pedidos pueden declarar una integración/ID externo y conservan una huella
   interna que no se expone en las respuestas.
+- `OrdersService` admite hooks internos dentro de su transacción y un origen
+  alternativo por carrito, sin alterar el contrato HTTP administrativo.
 
 ### Fixed
 
@@ -98,3 +110,5 @@ estructura inspirada en Keep a Changelog.
 - El webhook de Mercado Libre exige una IP normalizada presente en
   `config.webhookAllowedIps` y IDs de aplicación/vendedor configurados antes de
   escribir datos; responde HTTP 200 rápido.
+- Los tokens de carrito se generan aleatoriamente, se entregan una sola vez y
+  PostgreSQL conserva únicamente su hash SHA-256.

@@ -97,6 +97,20 @@ Este documento distingue endpoints implementados de endpoints planificados.
 | POST | `/api/v1/mercado-libre/integrations/:id/listings` | Bearer + `integrations.manage` | Crea/actualiza mapping de variante |
 | POST | `/api/v1/mercado-libre/integrations/:id/orders/import` | Bearer + `integrations.manage` | Importa pedido idempotente y reserva stock |
 | POST | `/api/v1/mercado-libre/webhooks/:id` | IP en allowlist | Valida origen y deduplica una notificación pública |
+| GET | `/api/v1/promotions` | Bearer + `promotions.read` | Lista promociones paginadas del tenant |
+| GET | `/api/v1/promotions/:id` | Bearer + `promotions.read` | Obtiene definición, alcance y redenciones contadas |
+| POST | `/api/v1/promotions` | Bearer + `promotions.manage` | Crea promoción automática o cupón |
+| PATCH | `/api/v1/promotions/:id` | Bearer + `promotions.manage` | Actualiza estado, vigencia y presentación |
+| GET | `/api/v1/storefront/:organizationSlug/:channelKey/catalog` | No | Catálogo público sanitizado y paginado |
+| GET | `/api/v1/storefront/:organizationSlug/:channelKey/catalog/:productSlug` | No | Detalle público por slug |
+| GET | `/api/v1/storefront/:organizationSlug/:channelKey/promotions` | No | Promociones automáticas públicas vigentes |
+| POST | `/api/v1/storefront/:organizationSlug/:channelKey/carts` | No | Crea carrito y entrega token opaco una vez |
+| GET | `/api/v1/storefront/:organizationSlug/:channelKey/carts/:cartId` | `x-cart-token` | Obtiene carrito autorizado |
+| PUT | `/api/v1/storefront/:organizationSlug/:channelKey/carts/:cartId/items/:variantId` | `x-cart-token` | Define cantidad de una variante |
+| DELETE | `/api/v1/storefront/:organizationSlug/:channelKey/carts/:cartId/items/:variantId` | `x-cart-token` | Quita variante del carrito |
+| PUT | `/api/v1/storefront/:organizationSlug/:channelKey/carts/:cartId/promotion` | `x-cart-token` | Aplica código de cupón |
+| DELETE | `/api/v1/storefront/:organizationSlug/:channelKey/carts/:cartId/promotion` | `x-cart-token` | Quita cupón explícito |
+| POST | `/api/v1/storefront/:organizationSlug/:channelKey/carts/:cartId/checkout` | `x-cart-token` | Crea pedido/reserva idempotentes |
 
 Los DTO aplican whitelist y validación runtime. Los UUID de ruta se validan como
 UUID v4. Conflictos Prisma `P2002` y registros ausentes `P2025` se mapean a HTTP.
@@ -271,6 +285,42 @@ outbox en una transacción. El replay reproduce el recibo y el mismo `_id` con
 payload distinto responde 409. El payload solo representa un aviso: un worker
 posterior deberá consultar `resource` con el access token y usar la respuesta
 oficial como estado autoritativo.
+
+## Promotions y Storefront
+
+Las promociones administrativas aceptan `PERCENTAGE` o `FIXED_AMOUNT`, alcance
+`ALL_CATALOG` o `VARIANTS`, vigencia, mínimo de compra, tope de descuento,
+prioridad y canal propio opcional. `automatic=true` prohíbe código; un cupón lo
+exige. Los importes son enteros CLP y el porcentaje no supera 100. La definición
+comercial central no se reescribe después de crearla: `PATCH` limita cambios a
+presentación, estado, prioridad y fechas.
+
+Un storefront existe cuando hay un `SalesChannel` activo de tipo
+`OWN_STOREFRONT`; se resuelve por slug de organización y key de canal. Su
+`metadata` puede definir `cartTtlHours` entre 1 y 168 (default 24) y
+`defaultShippingAmount` CLP (default 0). El catálogo solo publica productos,
+imágenes, precio comercial y disponibilidad agregada. Nunca devuelve costo,
+bodega, físico, reservado, credenciales ni campos administrativos.
+Las promociones automáticas públicas incluyen `variantIds` cuando su alcance es
+segmentado, usando los mismos IDs públicos del catálogo.
+
+Crear carrito devuelve `{ cartId, cartToken, cart }`; `cartToken` es aleatorio y
+solo aparece en esa respuesta. Las operaciones siguientes lo envían en
+`x-cart-token`. Token ausente/incorrecto responde 404 y un carrito activo vencido
+responde 410. Agregar items valida catálogo activo y disponibilidad pública;
+checkout vuelve a comprobar que una sola bodega pueda completar el carrito.
+
+El cupón explícito reemplaza promociones automáticas. Sin cupón se escoge la
+promoción automática que produce el mayor descuento y prioridad resuelve
+empates. Checkout recibe `customer`, `shippingAddress` y `notes?`, normaliza la
+identidad, crea/reutiliza cliente/dirección y genera un `Order PENDING`. Orden,
+reserva, redención, cierre `CHECKED_OUT` y evento
+`storefront.checkout.completed` se escriben en una transacción.
+
+La huella de checkout incluye carrito, versión y payload normalizado. Repetirla
+devuelve `idempotent: true` y la misma orden sin otra reserva; modificar datos da
+409. El carrito finalizado muestra importes/items desde los snapshots de la
+orden y la promoción desde su redención, no desde precios vigentes posteriores.
 
 ## Planificados
 
