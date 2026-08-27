@@ -23,10 +23,12 @@ el hito activo es Admin Web. Consulta
 - NestJS 11 con TypeScript estricto
 - PostgreSQL 18 y Redis 8 mediante Docker Compose
 - Prisma ORM 7 con driver adapter de PostgreSQL
-- Jest y Supertest
+- React 19, React Router 7 y Vite 8 para el Admin Web
+- Jest, Supertest, Vitest y Testing Library
 
-No existe frontend todavía. Se prioriza una base de backend segura antes del
-panel administrativo y storefront.
+El Admin Web ya dispone de scaffold, login, restauración/rotación de sesión y
+shell responsive conectado a la API real. Las vistas de dominio siguen
+pendientes y aparecen deshabilitadas hasta su implementación.
 
 ## Requisitos
 
@@ -44,6 +46,8 @@ copy backend\.env.example backend\.env
 cd backend
 npm ci
 npm run prisma:generate
+cd ..\frontend
+npm ci
 ```
 
 En macOS/Linux sustituye `copy` por `cp`. Los ejemplos contienen únicamente
@@ -100,6 +104,19 @@ npm run start:dev
 La API escucha por defecto en `http://localhost:3000`. Los endpoints de negocio
 se versionan bajo `/api/v1` a medida que se completa la foundation.
 
+## Ejecutar el Admin Web
+
+Configura `CORS_ORIGINS=http://localhost:5173` en `backend/.env` y, en otra
+terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+El panel escucha por defecto en `http://localhost:5173`; su URL de API y slug
+inicial se configuran con las variables de `frontend/.env.example`.
+
 ## Calidad y tests
 
 ```bash
@@ -109,6 +126,10 @@ npm run typecheck
 npm test -- --runInBand
 npm run test:e2e
 npm run build
+
+cd ../frontend
+npm run check
+npm run build
 ```
 
 ## Estructura
@@ -116,6 +137,7 @@ npm run build
 ```text
 dtodopets-core/
 ├── backend/            API NestJS, Prisma y tests
+├── frontend/           Admin Web React/Vite y tests
 ├── docs/               Arquitectura, estado y reglas del negocio
 ├── docker-compose.yml  PostgreSQL y Redis locales
 ├── AGENTS.md           Reglas para agentes y colaboradores

@@ -56,7 +56,19 @@ no componentes ya implementados.
   el intento antes del handler y expone una lectura paginada protegida por tenant.
 - `ReportsModule` construye proyecciones de lectura tenant-safe sobre órdenes,
   pagos, clientes, inventario, carritos y promociones sin duplicar datos ni tablas.
-- No existen frontend ni workers de publicación/reintento todavía.
+- `frontend/` contiene el Admin Web React/Vite: cliente HTTP tipado, login,
+  recuperación automática ante 401, restauración/rotación de sesión y shell
+  responsive cuya navegación se filtra por permisos de la API.
+- Las vistas administrativas de dominio y los workers de
+  publicación/reintento todavía no están implementados.
+
+## Sesión del Admin Web
+
+El access token solo vive en memoria. En este checkpoint el refresh token se
+mantiene en `sessionStorage` para restaurar la pestaña y se rota contra la API;
+es una solución intermedia, no el contrato objetivo de producción. Antes de
+exponer el panel debe migrarse a una cookie `HttpOnly`, `Secure` y `SameSite`
+mediante un endpoint web/BFF que no entregue el refresh token a JavaScript.
 
 ## Límites previstos
 

@@ -94,8 +94,15 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
 
 ## 🟡 FASE 13 — Admin Web
 
-- 🟡 Panel responsive conectado a la API real.
+- ✅ Scaffold React/Vite/TypeScript, configuración por entorno y scripts de
+  calidad/build reproducibles.
+- ✅ Login, logout, restauración/rotación, recuperación ante 401 y rutas
+  protegidas conectadas al contrato real de la API.
+- 🟡 Shell responsive y navegación por permisos implementados; falta inspección
+  visual desktop/móvil por una limitación del controlador de navegador.
 - ⬜ Pedidos, catálogo, inventario, clientes, usuarios, canales y reportes.
+- ⬜ Migrar el refresh token temporal de `sessionStorage` a cookie `HttpOnly`,
+  `Secure` y `SameSite` mediante endpoint web/BFF con protección CSRF.
 
 ## ⬜ FASE 14 — Automations & AI
 

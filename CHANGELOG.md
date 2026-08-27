@@ -96,6 +96,12 @@ estructura inspirada en Keep a Changelog.
   máximo de 366 días e importes/ticket promedio serializados como strings CLP.
 - Cobertura ampliada a 123 tests en 31 suites, manteniendo 6 e2e; smoke real y
   `EXPLAIN ANALYZE` validaron contratos, consistencia e índices sin otra migración.
+- Scaffold de Admin Web con React 19, React Router 7, Vite 8, TypeScript estricto,
+  configuración de API/organización por entorno y shell responsive accesible.
+- Login/logout, rutas protegidas, restauración y rotación de sesión, reintento
+  único tras 401 y navegación filtrada por los permisos reales del usuario.
+- 6 tests de frontend en 2 suites para cliente HTTP, errores seguros, sesión y
+  shell; build productivo y smoke cruzado de CORS/login/refresh/logout aprobados.
 
 ### Changed
 
@@ -106,6 +112,8 @@ estructura inspirada en Keep a Changelog.
   interna que no se expone en las respuestas.
 - `OrdersService` admite hooks internos dentro de su transacción y un origen
   alternativo por carrito, sin alterar el contrato HTTP administrativo.
+- El repositorio ahora separa `backend/` y `frontend/`, cada uno con instalación,
+  validación y build propios.
 
 ### Fixed
 
@@ -131,3 +139,6 @@ estructura inspirada en Keep a Changelog.
 - La auditoría administrativa nunca persiste body, query, mensajes de error ni
   secretos; el tenant/actor se derivan de la sesión y la lectura exige
   `audit.read`.
+- El Admin Web mantiene el access token solo en memoria. El refresh token usa
+  temporalmente `sessionStorage`; se documenta como riesgo pendiente y deberá
+  migrarse a cookie `HttpOnly`/`Secure`/`SameSite` antes de producción.

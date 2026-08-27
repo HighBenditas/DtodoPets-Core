@@ -7,6 +7,8 @@
   inventario, clientes, pedidos, pagos, devoluciones, shipments, integraciones y
   Mercado Libre, promociones, storefront, auditoría y reportes.
 - 6 e2e para rutas públicas, validación, autenticación, tenant y permisos.
+- 6 tests de frontend en 2 suites para cliente HTTP, errores seguros, login,
+  logout, restauración/rotación, sesión inválida y navegación por permisos.
 - Smoke test manual real aprobado contra PostgreSQL para bootstrap → RBAC →
   refresh rotativo → logout.
 - Smoke HTTP real de sucursales/bodegas, paginación y validación aprobado.
@@ -45,6 +47,11 @@
   400, `reports.read`, paginación y coincidencia de 2 ventas por 75.650 CLP.
 - `EXPLAIN (ANALYZE, BUFFERS)` diario: 0,115 ms sobre seis pedidos; scan secuencial
   elegido por baja cardinalidad e índice compuesto existente, sin nueva migración.
+- Smoke real del Admin Web: assets Vite `200`, preflight CORS `204`, login con 34
+  permisos, rotación del refresh token, replay anterior `401` y logout `204`.
+- La inspección visual en navegador quedó pendiente porque el controlador de
+  navegador de Codex no pudo iniciar por falta de `sandboxPolicy`; no afecta las
+  pruebas automatizadas, pero debe repetirse antes de cerrar la Fase 13.
 - No hay integration tests reales contra PostgreSQL.
 
 ## Estrategia
@@ -75,4 +82,11 @@ identifique explícitamente un entorno de test.
 npm test -- --runInBand
 npm run test:e2e
 npm run test:cov
+```
+
+Desde `frontend/`:
+
+```bash
+npm run check
+npm run build
 ```

@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-08-22.
+Actualizado: 2026-08-27.
 
 ## Estado actual
 
@@ -9,8 +9,9 @@ Identity & Access, sucursales/bodegas, catálogo, inventario, clientes, pedidos,
 pagos, devoluciones, logística, canales e integraciones multi-tenant. PostgreSQL
 y Redis funcionan en Docker. Mercado Libre ya mapea/importa y el storefront
 público ofrece catálogo, promociones, carrito y checkout idempotente sin
-frontend. Analytics & Audit ya ofrece auditoría administrativa, overview de KPIs
-y ventas diarias paginadas. El hito activo pasa a ser Admin Web.
+tienda visual. Analytics & Audit ofrece auditoría administrativa, overview de
+KPIs y ventas diarias paginadas. Admin Web ya tiene scaffold React/Vite, login,
+sesión rotativa y shell responsive; las vistas de dominio siguen pendientes.
 
 ## Último hito completado
 
@@ -141,10 +142,21 @@ FASE 14 — Automations & AI.
   rango máximo, permiso, paginación y consistencia de 2 ventas/75.650 CLP. El
   `EXPLAIN (ANALYZE, BUFFERS)` local tardó 0,115 ms sobre 6 pedidos y no justificó
   otro índice ni migración.
+- Admin Web React 19/Vite 8 con TypeScript estricto, configuración de entorno,
+  login, logout, restauración y rotación de sesión, reintento único tras 401,
+  rutas protegidas y cliente HTTP con errores/correlation ID seguros.
+- Shell responsive con navegación filtrada por permisos, estados de carga/error,
+  menú móvil, perfil y placeholders explícitamente deshabilitados para las vistas
+  aún no implementadas; no usa datos de dominio simulados.
+- 6 tests de frontend en 2 suites y build de producción correctos. Smoke real
+  aprobó assets `200`, CORS `204`, login con 34 permisos, rotación, replay `401`
+  y logout `204` contra la API/PostgreSQL locales.
 
 ## Funcionalidades pendientes
 
-- Admin Web, workers de outbox, automatizaciones y hardening de producción.
+- Vistas Admin Web de reportes, pedidos, catálogo, inventario, clientes, pagos,
+  logística, canales, usuarios y configuración.
+- Workers de outbox, automatizaciones y hardening de producción.
 
 ## Cierre de Fase 12
 
@@ -157,6 +169,18 @@ FASE 14 — Automations & AI.
   `AuditLog`; si una finalización falla, la mutación exitosa conserva su respuesta
   y el registro durable queda `ATTEMPTED` para diagnóstico/reconciliación.
 
+## Checkpoint parcial de Fase 13
+
+- Implementado: scaffold frontend, cliente API, autenticación, recuperación de
+  401, restauración/rotación, logout, rutas protegidas y shell responsive basado
+  en permisos reales.
+- Validado: lint, typecheck, 6 tests, build y smoke HTTP cruzado con la API real.
+  El primer login falló porque Docker Desktop estaba detenido; con PostgreSQL y
+  Redis saludables no se reprodujo ningún defecto de backend.
+- Configuración local: `backend/.env` requiere `CORS_ORIGINS=http://localhost:5173`
+  para Vite; el ejemplo versionado ya lo contempla.
+- No se implementaron vistas de dominio ni se inició la Fase 14.
+
 ## Problemas conocidos
 
 - `npm audit --omit=dev` informa tres vulnerabilidades altas transitivas por
@@ -164,7 +188,12 @@ FASE 14 — Automations & AI.
   degradar Prisma 7 a Prisma 6 y no debe aplicarse sin una migración evaluada.
 - La auditoría no captura rechazos de guards 401/403 y aún no existe un proceso
   automático para reconciliar intentos cuya finalización falle.
-- No hay frontend ni pipeline CI.
+- El refresh token del Admin Web vive temporalmente en `sessionStorage` y queda
+  expuesto ante XSS. Antes de producción debe migrarse a cookie `HttpOnly`,
+  `Secure` y `SameSite` mediante un endpoint web/BFF con protección CSRF.
+- La verificación visual responsive quedó pendiente: el controlador de navegador
+  de Codex no inició por falta de `sandboxPolicy`. Tests DOM y smoke HTTP sí pasan.
+- No hay pipeline CI ni vistas de dominio en el Admin Web.
 
 ## Decisiones tomadas
 
@@ -203,6 +232,9 @@ FASE 14 — Automations & AI.
 - Los reportes derivan el tenant de la sesión, usan UTC y rangos de hasta 366 días.
   Ventas realizadas son órdenes actualmente `CONFIRMED`/`COMPLETED`; pagos y
   reembolsos se informan aparte por su propia fecha para no confundir venta y caja.
+- El Admin Web conserva el access token solo en memoria, rota un refresh token
+  temporal en `sessionStorage` y nunca decide autorización: la navegación es una
+  ayuda de UX, mientras guards y permisos del backend siguen siendo autoritativos.
 
 ## Migraciones actuales
 
@@ -261,6 +293,10 @@ npx prisma migrate status
 npm run lint
 npm run typecheck
 npm test -- --runInBand
+npm run test:e2e
+npm run build
+cd ../frontend
+npm run check
 npm run build
 ```
 
@@ -272,8 +308,10 @@ documentos.
 
 ## NEXT ACTION
 
-Iniciar Fase 13 con un inventario de contratos y flujos del Admin Web, elegir el
-scaffold frontend compatible con el monorepo y construir primero autenticación,
-sesión y shell responsive contra la API real. No simular datos ni empezar vistas
-de dominio antes de validar login, manejo de 401/403, navegación y configuración
-de entorno sin secretos.
+Continuar la Fase 13 desde `frontend/` sin iniciar la Fase 14. Primero reemplazar
+el refresh token de `sessionStorage` por una sesión web en cookie `HttpOnly`,
+`Secure` y `SameSite` mediante un endpoint/BFF con protección CSRF y tests de
+rotación/logout. Después repetir la validación visual desktop/móvil del login y
+shell cuando el controlador de navegador disponga de `sandboxPolicy`. Con esa
+base segura, implementar como primer slice de dominio el dashboard conectado a
+`GET /api/v1/reports/overview`, con estados loading/empty/error/403 y sin mocks.

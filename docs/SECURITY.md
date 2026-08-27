@@ -51,9 +51,16 @@
   protege la consulta y PostgreSQL impide borrar o reescribir entradas terminales.
 - Los reportes requieren `reports.read`, reciben el tenant solo desde la sesión,
   parametrizan el SQL diario y acotan la ventana a 366 días para limitar abuso.
+- El Admin Web mantiene el access token solo en memoria, limpia el estado local
+  al fallar el refresh y filtra navegación por los permisos devueltos por la API;
+  la autorización efectiva continúa exclusivamente en el backend.
 
 ## Riesgos pendientes
 
+- El refresh token del Admin Web se conserva temporalmente en `sessionStorage`,
+  por lo que un XSS podría leerlo. Antes de producción debe reemplazarse por una
+  cookie `HttpOnly`, `Secure` y `SameSite` emitida por un endpoint web/BFF, junto
+  con la protección CSRF correspondiente.
 - Rate limiting específico de auth y recuperación de contraseña se abordarán en
   hardening; no hay endpoint de recuperación expuesto actualmente.
 - La CLI Prisma incluye una dependencia transitiva `deepmerge-ts` reportada por

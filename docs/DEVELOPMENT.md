@@ -4,6 +4,8 @@
 
 Sigue el quickstart de `README.md`. Trabaja desde la raíz Git
 `dtodopets-core/`; los comandos npm y Prisma se ejecutan desde `backend/`.
+El Admin Web se trabaja desde `frontend/`; para desarrollo cruzado configura
+`CORS_ORIGINS=http://localhost:5173` en `backend/.env`.
 
 ## Convenciones
 
@@ -50,5 +52,9 @@ npm run lint
 npm run typecheck
 npm test -- --runInBand
 npm run test:e2e
+npm run build
+
+cd ../frontend
+npm run check
 npm run build
 ```
