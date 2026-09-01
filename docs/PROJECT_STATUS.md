@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-08-27.
+Actualizado: 2026-08-28.
 
 ## Estado actual
 
@@ -11,7 +11,9 @@ y Redis funcionan en Docker. Mercado Libre ya mapea/importa y el storefront
 público ofrece catálogo, promociones, carrito y checkout idempotente sin
 tienda visual. Analytics & Audit ofrece auditoría administrativa, overview de
 KPIs y ventas diarias paginadas. Admin Web ya tiene scaffold React/Vite, login,
-sesión rotativa y shell responsive; las vistas de dominio siguen pendientes.
+sesión rotativa y shell responsive. Caja POS e importación RealBase son las
+primeras vistas operativas conectadas; las demás vistas de dominio siguen
+pendientes.
 
 ## Último hito completado
 
@@ -151,11 +153,35 @@ FASE 14 — Automations & AI.
 - 6 tests de frontend en 2 suites y build de producción correctos. Smoke real
   aprobó assets `200`, CORS `204`, login con 34 permisos, rotación, replay `401`
   y logout `204` contra la API/PostgreSQL locales.
+- Importador RealBase de Excel `.xlsx` con vista previa, códigos conservados como
+  texto, diagnóstico de errores/advertencias y aplicación transaccional que
+  actualiza catálogo, referencias externas, saldo absoluto y ledger.
+- El archivo real `44597_stock_actual_c5489ead.xlsx` fue validado sin aplicarlo:
+  1.240 filas, 1.188 válidas, 52 bloqueos, 50 stocks negativos, 51 inactivas y
+  61 advertencias. La UI exige confirmar la omisión de filas bloqueadas.
+- Caja POS para consumidor final con búsqueda/lector de código, carrito, stock
+  disponible por bodega, pago simple o mixto (efectivo, transferencia, débito y
+  crédito), operadores de terminal, vuelto e idempotencia de la venta completa.
+- La venta POS crea orden confirmada, items, pagos, historial, movimientos
+  `COMMIT` y evento `pos.sale-completed` dentro de la misma transacción; no puede
+  vender stock reservado ni dejar saldos negativos.
+- Una variante local admite varias publicaciones Mercado Libre, conservando la
+  unicidad del item/variación externo. El piloto usará DTodoPets como stock
+  maestro y un margen inicial de seguridad de una unidad para marketplaces.
+- Nuevos permisos `imports.manage` y `pos.sell`, provisionados en el seed; el
+  Owner local inicia sesión con 36 permisos.
+- 127 unit tests backend en 33 suites, 6 e2e y 9 tests frontend en 3 suites;
+  Prisma validate/generate, lint, typecheck y builds productivos correctos. El
+  smoke HTTP real aprobó login, permisos, bodegas, catálogo POS y preview del
+  Excel real sin mutar productos ni stock.
 
 ## Funcionalidades pendientes
 
-- Vistas Admin Web de reportes, pedidos, catálogo, inventario, clientes, pagos,
-  logística, canales, usuarios y configuración.
+- Vistas Admin Web de reportes, pedidos, catálogo general, inventario, clientes,
+  pagos, logística, canales, usuarios y configuración.
+- Emisión de boleta/factura mediante RealBase API v2 e impresión térmica 80 mm.
+- Sincronización automática de stock/pedidos con Mercado Libre y futuros
+  marketplaces Lider/Falabella.
 - Workers de outbox, automatizaciones y hardening de producción.
 
 ## Cierre de Fase 12
@@ -179,21 +205,31 @@ FASE 14 — Automations & AI.
   Redis saludables no se reprodujo ningún defecto de backend.
 - Configuración local: `backend/.env` requiere `CORS_ORIGINS=http://localhost:5173`
   para Vite; el ejemplo versionado ya lo contempla.
-- No se implementaron vistas de dominio ni se inició la Fase 14.
+- Se implementaron los primeros slices de dominio: Caja e Importar datos, ambos
+  conectados a contratos reales y filtrados por permisos.
+- La migración local `add_pos_sales` está aplicada y el seed fue actualizado. La
+  importación del Excel comercial no se aplicó para evitar cambiar inventario sin
+  una decisión explícita sobre las 52 filas bloqueadas.
+- No se inició la Fase 14.
 
 ## Problemas conocidos
 
-- `npm audit --omit=dev` informa tres vulnerabilidades altas transitivas por
-  `deepmerge-ts` dentro de la CLI Prisma. La corrección automática propone
-  degradar Prisma 7 a Prisma 6 y no debe aplicarse sin una migración evaluada.
+- `npm audit --omit=dev` informa cinco vulnerabilidades: tres altas transitivas
+  por `deepmerge-ts` dentro de Prisma y dos moderadas por `uuid` dentro de
+  ExcelJS. Las correcciones automáticas proponen downgrades incompatibles de
+  Prisma/ExcelJS y no deben aplicarse sin una migración evaluada.
 - La auditoría no captura rechazos de guards 401/403 y aún no existe un proceso
   automático para reconciliar intentos cuya finalización falle.
 - El refresh token del Admin Web vive temporalmente en `sessionStorage` y queda
   expuesto ante XSS. Antes de producción debe migrarse a cookie `HttpOnly`,
   `Secure` y `SameSite` mediante un endpoint web/BFF con protección CSRF.
-- La verificación visual responsive quedó pendiente: el controlador de navegador
-  de Codex no inició por falta de `sandboxPolicy`. Tests DOM y smoke HTTP sí pasan.
-- No hay pipeline CI ni vistas de dominio en el Admin Web.
+- La verificación visual responsive sigue pendiente: el controlador del navegador
+  local no inició por un error de ruta de Windows incluso después de reiniciarlo.
+  Tests DOM, build y smoke HTTP sí pasan.
+- La venta POS todavía no emite el DTE tributario en RealBase ni imprime la
+  boleta; el evento durable existe para implementar ese adaptador sin acoplarlo a
+  la transacción de caja.
+- No hay pipeline CI y faltan las demás vistas de dominio en el Admin Web.
 
 ## Decisiones tomadas
 
@@ -235,6 +271,12 @@ FASE 14 — Automations & AI.
 - El Admin Web conserva el access token solo en memoria, rota un refresh token
   temporal en `sessionStorage` y nunca decide autorización: la navegación es una
   ayuda de UX, mientras guards y permisos del backend siguen siendo autoritativos.
+- DTodoPets será la fuente maestra de stock después de un piloto reconciliado.
+  Mercado Libre comienza con margen de seguridad 1; Lider es el siguiente
+  marketplace prioritario y Falabella queda después.
+- RealBase sigue siendo el emisor tributario. La máquina Transbank/Mercado Pago/
+  BancoEstado registra la transacción, pero la venta no se considera lista para
+  impresión fiscal hasta que el adaptador RealBase confirme su DTE.
 
 ## Migraciones actuales
 
@@ -257,6 +299,7 @@ FASE 14 — Automations & AI.
 | `20260823002200_fix_order_source_pair_constraint` | Aplicada | Trío de origen externo explícitamente completo o nulo |
 | `20260823004000_add_storefront_promotions` | Aplicada | Promociones, carritos, redenciones y origen storefront de pedidos |
 | `20260823005000_add_analytics_audit` | Aplicada | Base persistente e inmutable de auditoría administrativa |
+| `20260828183000_add_pos_sales` | Aplicada | Checkout POS, cliente opcional, canal de venta y listings múltiples por variante |
 
 La base local contiene datos ficticios de desarrollo creados durante los smoke
 tests: una organización, dos usuarios, seis roles, treinta y cuatro permisos, una
@@ -277,7 +320,7 @@ datos ni reservas existentes.
 El smoke de Storefront agregó un canal propio, un cupón, un carrito finalizado,
 una redención, un pedido `PENDING`, una reserva y el evento de checkout; el replay
 no creó una segunda orden ni incrementó otra vez el reservado.
-El seed de este checkpoint elevó el catálogo RBAC a treinta y cuatro permisos y
+El seed de este checkpoint elevó el catálogo RBAC a treinta y seis permisos y
 el smoke de Audit agregó dos registros terminales: uno exitoso y uno fallido; el
 valor sensible usado para probar validación no se persistió.
 
@@ -308,10 +351,12 @@ documentos.
 
 ## NEXT ACTION
 
-Continuar la Fase 13 desde `frontend/` sin iniciar la Fase 14. Primero reemplazar
-el refresh token de `sessionStorage` por una sesión web en cookie `HttpOnly`,
-`Secure` y `SameSite` mediante un endpoint/BFF con protección CSRF y tests de
-rotación/logout. Después repetir la validación visual desktop/móvil del login y
-shell cuando el controlador de navegador disponga de `sandboxPolicy`. Con esa
-base segura, implementar como primer slice de dominio el dashboard conectado a
-`GET /api/v1/reports/overview`, con estados loading/empty/error/403 y sin mocks.
+Continuar la Fase 13 sin iniciar la Fase 14. Primero revisar en `Importar datos`
+las 52 filas bloqueadas del Excel real y decidir si se corrigen en RealBase o se
+omiten durante una carga piloto respaldada/reconciliada. Después implementar el
+adaptador RealBase API v2 que consuma `pos.sale-completed`, emita el DTE y habilite
+la impresión térmica de 80 mm solo tras confirmación. Luego cargar mappings del
+Excel de publicaciones Mercado Libre por código de barras y sincronizar stock con
+margen 1. Antes de producción sigue siendo obligatorio migrar el refresh token a
+cookie `HttpOnly`/`Secure`/`SameSite` con CSRF y repetir inspección visual
+desktop/móvil cuando el controlador local vuelva a estar disponible.

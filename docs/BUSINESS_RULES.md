@@ -150,9 +150,10 @@ roadmap.
 
 - Solo una integración activa con provider `mercado-libre` puede operar el
   adaptador y siempre queda limitada al tenant autenticado.
-- Una variante se mapea una vez por integración; el par item/variación externo
-  tampoco puede apuntar a dos variantes. Precio, comisión y stock son snapshots,
-  no sustituyen al catálogo/inventario central.
+- Una variante local puede alimentar varias publicaciones de una integración;
+  el par item/variación externo sí es único y no puede cambiar de variante.
+  Precio, comisión y stock son snapshots, no sustituyen al catálogo/inventario
+  central.
 - Importar una orden resuelve todos los items antes de crearla. Si alguno no
   está mapeado, no se reserva inventario ni se persiste un pedido parcial.
 - Integración e ID externo identifican una orden. La misma huella reproduce la
@@ -165,6 +166,37 @@ roadmap.
   su ID con otro payload responde 409.
 - La ruta webhook es pública solo respecto del Bearer/RBAC; el origen se limita
   por allowlist. Las demás rutas exigen `integrations.manage`.
+
+### Importación RealBase
+
+- La plantilla se analiza completa antes de escribir. Códigos se conservan como
+  texto y un precio neto se transforma a precio bruto CLP con IVA 19% redondeado
+  al peso.
+- Stock negativo, identificadores obligatorios ausentes y códigos duplicados
+  bloquean su fila. El operador puede corregir el archivo o confirmar que desea
+  omitir solo las filas bloqueadas; las advertencias no impiden importar.
+- Aplicar una plantilla crea o actualiza catálogo, referencia externa y saldo
+  absoluto de la bodega dentro de una transacción. Cada diferencia genera un
+  movimiento `ADJUSTMENT`; nunca reduce físico por debajo de lo reservado.
+- El código interno RealBase es la referencia estable. Código de barras se usa
+  como SKU cuando existe y los valores alfanuméricos no se convierten a número.
+
+### Caja POS
+
+- Una venta de sucursal es una orden `CONFIRMED` de consumidor final, sin exigir
+  cliente ni dirección, ligada a la bodega y al canal manual `pos-sucursal`.
+- El precio se toma del catálogo central. La suma de efectivo, transferencia,
+  débito y crédito debe coincidir exactamente con el total; se permiten varios
+  pagos y cada uno queda registrado por separado.
+- Efectivo puede declarar monto recibido y vuelto, pero nunca menos que el monto
+  aplicado. Transbank, Mercado Pago, BancoEstado u otro operador se conserva en
+  `provider`; la transacción de la máquina no reemplaza el DTE de RealBase.
+- Confirmar bloquea saldos, valida disponibilidad, descuenta stock físico, crea
+  movimientos `COMMIT`, pagos, historial y evento `pos.sale-completed` en una
+  sola transacción. La clave/huella de checkout evita ventas duplicadas.
+- Durante el piloto, DTodoPets será el stock maestro y Mercado Libre publicará
+  disponible menos una unidad de seguridad. Esta reserva comercial no modifica
+  el físico; la sincronización automática queda a cargo del adaptador futuro.
 
 ### Promotions y Storefront
 

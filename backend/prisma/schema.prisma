@@ -468,36 +468,40 @@ enum OrderStatus {
 }
 
 model Order {
-  id                  String      @id @default(uuid())
-  organizationId      String
-  number              String
-  customerId          String
-  customerAddressId   String
-  warehouseId         String
-  status              OrderStatus @default(PENDING)
-  currency            String      @default("CLP")
-  subtotalAmount      Decimal     @db.Decimal(14, 0)
-  discountAmount      Decimal     @default(0) @db.Decimal(14, 0)
-  shippingAmount      Decimal     @default(0) @db.Decimal(14, 0)
-  totalAmount         Decimal     @db.Decimal(14, 0)
-  customerSnapshot    Json
-  shippingSnapshot    Json
-  notes               String?
-  sourceIntegrationId String?
-  externalOrderId     String?
-  sourceRequestHash   String?
-  storefrontCartId    String?
-  createdByUserId     String
-  confirmedAt         DateTime?
-  cancelledAt         DateTime?
-  completedAt         DateTime?
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  id                     String      @id @default(uuid())
+  organizationId         String
+  number                 String
+  customerId             String?
+  customerAddressId      String?
+  warehouseId            String
+  salesChannelId         String?
+  status                 OrderStatus @default(PENDING)
+  currency               String      @default("CLP")
+  subtotalAmount         Decimal     @db.Decimal(14, 0)
+  discountAmount         Decimal     @default(0) @db.Decimal(14, 0)
+  shippingAmount         Decimal     @default(0) @db.Decimal(14, 0)
+  totalAmount            Decimal     @db.Decimal(14, 0)
+  customerSnapshot       Json
+  shippingSnapshot       Json
+  notes                  String?
+  sourceIntegrationId    String?
+  externalOrderId        String?
+  sourceRequestHash      String?
+  storefrontCartId       String?
+  checkoutIdempotencyKey String?
+  checkoutRequestHash    String?
+  createdByUserId        String
+  confirmedAt            DateTime?
+  cancelledAt            DateTime?
+  completedAt            DateTime?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
   organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  customer             Customer              @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  customerAddress      CustomerAddress       @relation(fields: [customerAddressId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customer             Customer?             @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customerAddress      CustomerAddress?      @relation(fields: [customerAddressId, organizationId], references: [id, organizationId], onDelete: Restrict)
   warehouse            Warehouse             @relation(fields: [warehouseId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  salesChannel         SalesChannel?         @relation("OrderSalesChannel", fields: [salesChannelId, organizationId], references: [id, organizationId], onDelete: Restrict)
   createdBy            User                  @relation("OrderCreator", fields: [createdByUserId, organizationId], references: [id, organizationId], onDelete: Restrict)
   items                OrderItem[]
   statusHistory        OrderStatusHistory[]
@@ -511,10 +515,12 @@ model Order {
   @@unique([organizationId, number])
   @@unique([sourceIntegrationId, externalOrderId])
   @@unique([storefrontCartId, organizationId])
+  @@unique([organizationId, checkoutIdempotencyKey])
   @@unique([id, organizationId])
   @@index([organizationId, status, createdAt])
   @@index([customerId, createdAt])
   @@index([warehouseId, createdAt])
+  @@index([salesChannelId, createdAt])
 }
 
 model OrderItem {
@@ -812,6 +818,7 @@ model SalesChannel {
   integrations Integration[]
   promotions   Promotion[]
   carts        Cart[]
+  orders       Order[]       @relation("OrderSalesChannel")
 
   @@unique([organizationId, key])
   @@unique([id, organizationId])
@@ -948,7 +955,6 @@ model MercadoLibreListing {
   variant      ProductVariant @relation(fields: [variantId, organizationId], references: [id, organizationId], onDelete: Restrict)
 
   @@unique([integrationId, externalItemId, externalVariationId])
-  @@unique([integrationId, variantId])
   @@unique([id, organizationId])
   @@index([organizationId, status, updatedAt])
   @@index([variantId])

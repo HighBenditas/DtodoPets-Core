@@ -8,11 +8,13 @@ import { CustomersModule } from './customers/customers.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { ImportsModule } from './imports/imports.module';
 import { LocationsModule } from './locations/locations.module';
 import { MercadoLibreModule } from './mercado-libre/mercado-libre.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
+import { PosModule } from './pos/pos.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { ReturnsModule } from './returns/returns.module';
 import { ReportsModule } from './reports/reports.module';
@@ -32,12 +34,14 @@ import { StorefrontModule } from './storefront/storefront.module';
     CustomersModule,
     HealthModule,
     InventoryModule,
+    ImportsModule,
     IntegrationsModule,
     LocationsModule,
     MercadoLibreModule,
     OrganizationsModule,
     OrdersModule,
     PaymentsModule,
+    PosModule,
     PromotionsModule,
     ReportsModule,
     ReturnsModule,

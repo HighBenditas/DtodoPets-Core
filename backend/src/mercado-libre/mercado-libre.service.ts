@@ -57,11 +57,27 @@ export class MercadoLibreService {
     const externalVariationId = dto.externalVariationId?.trim() ?? '';
     try {
       return await this.prisma.$transaction(async (tx) => {
+        const current = await tx.mercadoLibreListing.findUnique({
+          where: {
+            integrationId_externalItemId_externalVariationId: {
+              externalItemId,
+              externalVariationId,
+              integrationId,
+            },
+          },
+          select: { variantId: true },
+        });
+        if (current && current.variantId !== dto.variantId) {
+          throw new ConflictException(
+            'Mercado Libre listing mapping is already in use',
+          );
+        }
         const listing = await tx.mercadoLibreListing.upsert({
           where: {
-            integrationId_variantId: {
+            integrationId_externalItemId_externalVariationId: {
+              externalItemId,
+              externalVariationId,
               integrationId,
-              variantId: dto.variantId,
             },
           },
           create: {

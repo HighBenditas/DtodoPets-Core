@@ -27,7 +27,11 @@ export async function apiRequest<T>(
   const headers = new Headers(options.headers);
   headers.set('accept', 'application/json');
   if (accessToken) headers.set('authorization', `Bearer ${accessToken}`);
-  if (options.body !== undefined && !headers.has('content-type')) {
+  if (
+    options.body !== undefined &&
+    !(options.body instanceof FormData) &&
+    !headers.has('content-type')
+  ) {
     headers.set('content-type', 'application/json');
   }
 
@@ -82,4 +86,3 @@ async function responsePayload(response: Response): Promise<unknown> {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
-

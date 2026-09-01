@@ -102,6 +102,18 @@ estructura inspirada en Keep a Changelog.
   único tras 401 y navegación filtrada por los permisos reales del usuario.
 - 6 tests de frontend en 2 suites para cliente HTTP, errores seguros, sesión y
   shell; build productivo y smoke cruzado de CORS/login/refresh/logout aprobados.
+- Migración `add_pos_sales` con ventas de consumidor final, canal POS, clave y
+  huella de checkout, relación opcional de cliente/dirección y múltiples listings
+  Mercado Libre por variante local.
+- `ImportsModule` para previsualizar/aplicar plantillas Excel de stock RealBase,
+  conservar códigos, diagnosticar filas y ajustar catálogo/inventario de forma
+  transaccional con ledger y evento outbox.
+- `PosModule` con catálogo disponible por bodega y venta atómica/idempotente que
+  admite efectivo, transferencia, débito, crédito y combinaciones de pagos.
+- Pantallas Admin Web de Caja e Importar datos, protegidas por `pos.sell` e
+  `imports.manage`, compatibles con lector de código de barras y flujo responsive.
+- Cobertura ampliada a 127 unit tests backend, 6 e2e y 9 tests frontend; builds
+  productivos y smoke HTTP real de catálogo POS/vista previa del Excel aprobados.
 
 ### Changed
 
@@ -114,6 +126,8 @@ estructura inspirada en Keep a Changelog.
   alternativo por carrito, sin alterar el contrato HTTP administrativo.
 - El repositorio ahora separa `backend/` y `frontend/`, cada uno con instalación,
   validación y build propios.
+- Una variante local puede asociarse a varias publicaciones Mercado Libre; la
+  identidad item/variación externa continúa siendo única por integración.
 
 ### Fixed
 
@@ -129,6 +143,8 @@ estructura inspirada en Keep a Changelog.
 - Los archivos de entorno permanecen fuera del repositorio.
 - Se documentó la alerta transitiva de `deepmerge-ts` en la herramienta Prisma;
   no se aplicó el downgrade destructivo propuesto por `npm audit --force`.
+- ExcelJS incorpora una alerta moderada transitiva de `uuid`; tampoco se aplicó
+  el downgrade incompatible sugerido por `npm audit --force`.
 - Passwords usan scrypt con salt; refresh tokens se guardan hasheados, rotan y
   sus sesiones pueden revocarse inmediatamente.
 - El webhook de Mercado Libre exige una IP normalizada presente en

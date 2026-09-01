@@ -100,6 +100,14 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
   protegidas conectadas al contrato real de la API.
 - 🟡 Shell responsive y navegación por permisos implementados; falta inspección
   visual desktop/móvil por una limitación del controlador de navegador.
+- ✅ Caja POS para consumidor final con lector como entrada de teclado, carrito,
+  pagos simples/mixtos, vuelto, idempotencia y descuento atómico de inventario.
+- ✅ Importación de stock RealBase con Excel `.xlsx`, vista previa, diagnóstico
+  de filas y aplicación transaccional a catálogo/bodega.
+- ⬜ Emitir boleta/factura en RealBase API v2 desde el evento de venta POS y
+  habilitar impresión térmica de 80 mm solo tras confirmar el DTE.
+- ⬜ Importar los mappings reales de publicaciones Mercado Libre por código de
+  barras y sincronizar stock maestro con margen de seguridad inicial de 1.
 - ⬜ Pedidos, catálogo, inventario, clientes, usuarios, canales y reportes.
 - ⬜ Migrar el refresh token temporal de `sessionStorage` a cookie `HttpOnly`,
   `Secure` y `SameSite` mediante endpoint web/BFF con protección CSRF.

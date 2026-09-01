@@ -63,5 +63,26 @@ describe('apiRequest', () => {
       status: 0,
     });
   });
-});
 
+  it('lets the browser set the multipart boundary for spreadsheet uploads', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { 'content-type': 'application/json' },
+        status: 200,
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const body = new FormData();
+    body.append('file', new File(['stock'], 'stock.xlsx'));
+
+    await apiRequest('/imports/relbase/stock/preview', {
+      accessToken: 'access-secret',
+      body,
+      method: 'POST',
+    });
+
+    const [, options] = fetchMock.mock.calls[0] ?? [];
+    expect(new Headers(options?.headers).has('content-type')).toBe(false);
+    expect(options?.body).toBe(body);
+  });
+});

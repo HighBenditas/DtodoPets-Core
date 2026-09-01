@@ -58,9 +58,10 @@ no componentes ya implementados.
   pagos, clientes, inventario, carritos y promociones sin duplicar datos ni tablas.
 - `frontend/` contiene el Admin Web React/Vite: cliente HTTP tipado, login,
   recuperación automática ante 401, restauración/rotación de sesión y shell
-  responsive cuya navegación se filtra por permisos de la API.
-- Las vistas administrativas de dominio y los workers de
-  publicación/reintento todavía no están implementados.
+  responsive cuya navegación se filtra por permisos de la API. Caja POS e
+  importación RealBase son los primeros slices operativos conectados al core.
+- Las demás vistas administrativas y los workers de publicación/reintento
+  todavía no están implementados.
 
 ## Sesión del Admin Web
 

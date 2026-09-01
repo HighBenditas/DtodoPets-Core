@@ -5,12 +5,14 @@ import {
   CircleDollarSign,
   ContactRound,
   CreditCard,
+  FileUp,
   LayoutDashboard,
   LogOut,
   Menu,
   PackageSearch,
   PlugZap,
   Settings,
+  ScanLine,
   ShoppingBag,
   Truck,
   UsersRound,
@@ -52,6 +54,13 @@ const navigation: Array<{ items: NavigationItem[]; label: string }> = [
   {
     label: 'Operación',
     items: [
+      {
+        enabled: true,
+        icon: ScanLine,
+        label: 'Caja',
+        permission: 'pos.sell',
+        to: '/pos',
+      },
       {
         enabled: false,
         icon: ShoppingBag,
@@ -99,6 +108,13 @@ const navigation: Array<{ items: NavigationItem[]; label: string }> = [
   {
     label: 'Administración',
     items: [
+      {
+        enabled: true,
+        icon: FileUp,
+        label: 'Importar datos',
+        permission: 'imports.manage',
+        to: '/imports',
+      },
       {
         enabled: false,
         icon: PlugZap,
@@ -292,4 +308,3 @@ export function AppShell() {
     </div>
   );
 }
-

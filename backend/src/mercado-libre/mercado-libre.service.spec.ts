@@ -11,6 +11,7 @@ describe('MercadoLibreService', () => {
         create: jest.fn().mockResolvedValue({ id: 'ref-a' }),
       },
       mercadoLibreListing: {
+        findUnique: jest.fn().mockResolvedValue(null),
         upsert: jest.fn().mockResolvedValue({
           availableQuantity: 5,
           id: 'listing-a',
