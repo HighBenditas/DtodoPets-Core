@@ -1,6 +1,30 @@
 # Estado del proyecto
 
-Actualizado: 2026-08-28.
+Actualizado: 2026-11-16.
+
+## Validación actual — Etapa 2A
+
+- Backend POS corregido para salidas inmediatas `SALE` sin tocar reservas;
+  `COMMIT` conserva el consumo de reservas de pedidos existentes.
+- Dos migraciones aditivas aplicadas únicamente a `dtodopets_stage1_test`.
+  La base comercial `dtodopets` no fue migrada ni modificada.
+- Doce regresiones HTTP/PostgreSQL reales aprobadas: 10→9, venta múltiple,
+  pagos mixtos, disponibilidad reservada, idempotencia secuencial/concurrente,
+  última unidad, rollback tardío, tenant, restricciones SQL y contratos de
+  pedidos/transferencias/devoluciones tradicionales.
+- Prisma format/validate/generate, lint, typecheck y build aprobados; 128 pruebas
+  unitarias backend, 6 HTTP con mocks y 9 pruebas frontend aprobadas.
+- La prueba de reinicio conservó productos, saldos, movimientos, pedidos y pagos
+  de la base sintética. Las huellas de la base comercial siguen iguales.
+- La bodega operativa única requiere una relación explícita por organización;
+  propuesta y alternativas en `docs/POS_STAGE2A.md`. No se fusionaron bodegas.
+- Devolución POS con reintegro sigue pendiente: ReturnsService exige actualmente
+  una reserva de origen. No se modificó ese módulo en esta entrega.
+- No se inició Etapa 2B ni hubo llamadas a Mercado Libre o merge. La publicación
+  de Etapa 2A en la rama de desarrollo fue autorizada explícitamente por el usuario.
+
+Las secciones siguientes conservan el registro histórico de los hitos de agosto.
+Las cantidades y smoke tests históricos no sustituyen esta validación actual.
 
 ## Estado actual
 
@@ -163,7 +187,7 @@ FASE 14 — Automations & AI.
   disponible por bodega, pago simple o mixto (efectivo, transferencia, débito y
   crédito), operadores de terminal, vuelto e idempotencia de la venta completa.
 - La venta POS crea orden confirmada, items, pagos, historial, movimientos
-  `COMMIT` y evento `pos.sale-completed` dentro de la misma transacción; no puede
+  `SALE` y evento `pos.sale-completed` dentro de la misma transacción; no puede
   vender stock reservado ni dejar saldos negativos.
 - Una variante local admite varias publicaciones Mercado Libre, conservando la
   unicidad del item/variación externo. El piloto usará DTodoPets como stock
@@ -351,12 +375,8 @@ documentos.
 
 ## NEXT ACTION
 
-Continuar la Fase 13 sin iniciar la Fase 14. Primero revisar en `Importar datos`
-las 52 filas bloqueadas del Excel real y decidir si se corrigen en RealBase o se
-omiten durante una carga piloto respaldada/reconciliada. Después implementar el
-adaptador RealBase API v2 que consuma `pos.sale-completed`, emita el DTE y habilite
-la impresión térmica de 80 mm solo tras confirmación. Luego cargar mappings del
-Excel de publicaciones Mercado Libre por código de barras y sincronizar stock con
-margen 1. Antes de producción sigue siendo obligatorio migrar el refresh token a
-cookie `HttpOnly`/`Secure`/`SameSite` con CSRF y repetir inspección visual
-desktop/móvil cuando el controlador local vuelva a estar disponible.
+Revisar con el usuario los resultados de Etapa 2A antes de iniciar Etapa 2B.
+Priorizar la decisión de bodega operativa por organización, lector POS/permisos
+y origen para devoluciones POS. No aplicar las migraciones nuevas a `dtodopets`
+sin un respaldo recuperable y autorización específica. No habilitar Mercado Libre
+ni importar stock comercial durante esta revisión.

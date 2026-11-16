@@ -102,6 +102,10 @@ Leyenda: ✅ completado · 🟡 en progreso · ⬜ pendiente · 🔴 bloqueado.
   visual desktop/móvil por una limitación del controlador de navegador.
 - ✅ Caja POS para consumidor final con lector como entrada de teclado, carrito,
   pagos simples/mixtos, vuelto, idempotencia y descuento atómico de inventario.
+- ✅ Etapa 2A: backend POS validado con PostgreSQL aislado, movimientos `SALE`,
+  reservas ajenas intactas, última unidad, reintentos concurrentes y rollback.
+- ⬜ Revisar resultados de Etapa 2A antes de comenzar Etapa 2B: bodega operativa
+  explícita por tenant, lector/permisos y devolución POS con origen trazable.
 - ✅ Importación de stock RealBase con Excel `.xlsx`, vista previa, diagnóstico
   de filas y aplicación transaccional a catálogo/bodega.
 - ⬜ Emitir boleta/factura en RealBase API v2 desde el evento de venta POS y

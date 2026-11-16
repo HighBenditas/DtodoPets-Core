@@ -2,6 +2,33 @@
 
 ## Estado actual
 
+Etapa 2A (2026-11-16) agrega doce pruebas contra PostgreSQL real en
+`backend/test/pos.postgres-spec.ts`, separadas de las pruebas HTTP con mocks.
+Requieren explícitamente `DATABASE_URL_TEST` apuntando a
+`127.0.0.1:55432/dtodopets_stage1_test` y `NODE_ENV=test`; cualquier otro destino
+se rechaza antes de crear la aplicación. No hacen reset, seed comercial ni
+migraciones automáticas. Cada ejecución agrega fixtures sintéticos aislados por
+organización y conserva la evidencia para diagnóstico.
+
+Validación de esta entrega: 128 unit tests backend en 33 suites, 6 pruebas HTTP
+con mocks, 12 con PostgreSQL real y 9 pruebas frontend. Lint, typecheck, build y
+Prisma format/validate/generate aprobados. La persistencia se verificó después
+de reiniciar únicamente la instancia PostgreSQL de pruebas.
+
+Desde `backend/`, con la URL sintética inyectada solo al proceso:
+
+```powershell
+npm.cmd run test:postgres -- --no-cache
+```
+
+El comando incluye `--experimental-vm-modules` porque el compilador WASM de
+Prisma 7 utiliza imports dinámicos dentro de Jest. No se reemplaza Prisma por
+mocks. El reinicio controlado de PostgreSQL y las huellas de persistencia se
+verificaron aparte en `../stage2a-validation-20261116/` (desde la raíz Git).
+Ver `POS_STAGE2A.md` para el defecto, compatibilidad y limitaciones.
+
+Los recuentos y smoke tests que siguen son el registro histórico anterior:
+
 - 123 unit tests en 31 suites para configuración, health, Organization, password,
   login/sesiones, permisos, usuarios, roles, sucursales, bodegas, catálogo,
   inventario, clientes, pedidos, pagos, devoluciones, shipments, integraciones y

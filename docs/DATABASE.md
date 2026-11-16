@@ -478,6 +478,15 @@ cada tipo use deltas válidos. Un trigger rechaza cualquier UPDATE o DELETE: el
 ledger solo admite inserts. `RETURN` aumenta únicamente físico y deja reservado
 intacto cuando una devolución decide reintegrar mercadería.
 
+Desde Etapa 2A, `SALE` representa la entrega inmediata de Caja POS: físico
+disminuye, reservado no cambia. Las migraciones aditivas
+`20261116183000_add_inventory_sale_type` y
+`20261116183100_allow_inventory_sale_movements` agregan el enum y extienden
+atómicamente el CHECK de tipos. Se separan para confirmar el valor del enum
+antes de usarlo en una restricción PostgreSQL. Ninguna regla anterior ni el
+trigger append-only se relaja. Estas migraciones se aplicaron solo a la base
+aislada `dtodopets_stage1_test`; la base existente conserva sus 18 migraciones.
+
 `InventoryReservation` identifica cada reserva, su cantidad, referencia externa
 opcional, creador y cierre. Una referencia es única por saldo y tenant. Los
 estados `ACTIVE`/`RELEASED`/`CONSUMED` están ligados por constraints a sus

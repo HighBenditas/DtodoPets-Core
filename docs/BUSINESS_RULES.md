@@ -192,8 +192,14 @@ roadmap.
   aplicado. Transbank, Mercado Pago, BancoEstado u otro operador se conserva en
   `provider`; la transacción de la máquina no reemplaza el DTE de RealBase.
 - Confirmar bloquea saldos, valida disponibilidad, descuenta stock físico, crea
-  movimientos `COMMIT`, pagos, historial y evento `pos.sale-completed` en una
+  movimientos `SALE`, pagos, historial y evento `pos.sale-completed` en una
   sola transacción. La clave/huella de checkout evita ventas duplicadas.
+- `SALE` reduce solamente físico y conserva las reservas de otros pedidos.
+  `COMMIT` conserva su contrato histórico: reduce físico y reservado en la
+  misma cantidad al consumir una reserva. Una venta POS no crea reservas
+  artificiales ni consume las de otro canal.
+- Un replay concurrente se comprueba también después de bloquear saldos: si la
+  primera solicitud agotó el stock, el mismo checkout devuelve la venta previa.
 - Durante el piloto, DTodoPets será el stock maestro y Mercado Libre publicará
   disponible menos una unidad de seguridad. Esta reserva comercial no modifica
   el físico; la sincronización automática queda a cargo del adaptador futuro.

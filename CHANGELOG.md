@@ -5,6 +5,19 @@ estructura inspirada en Keep a Changelog.
 
 ## [Unreleased]
 
+### Fixed — 2026-11-16, Etapa 2A
+
+- POS utiliza `SALE` para reducir stock físico sin consumir reservas de otros
+  pedidos; `COMMIT` conserva su semántica histórica y todas sus restricciones.
+- Relectura idempotente tras bloquear inventario para reproducir solicitudes
+  concurrentes idénticas incluso si la primera consume la última unidad.
+- Dos migraciones aditivas del enum/CHECK, aplicadas solamente a PostgreSQL
+  aislado, sin cambios en migraciones históricas ni datos comerciales.
+- Suite opt-in `test:postgres` con doce regresiones reales para ventas, pagos,
+  reservas, rollback, concurrencia, tenants y compatibilidad de operaciones.
+- Propuesta de bodega operativa por organización y límites de la entrega
+  documentados en `docs/POS_STAGE2A.md`; Etapa 2B no iniciada.
+
 ### Added
 
 - Documentación inicial de arquitectura, base de datos, desarrollo, seguridad,
