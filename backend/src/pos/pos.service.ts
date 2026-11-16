@@ -223,6 +223,21 @@ export class PosService {
           lockedBalances.map((balance) => [balance.variantId, balance]),
         );
 
+        // A concurrent request may have committed while we waited for stock.
+        // Replay it before rejecting the now-reduced availability.
+        const lockedReplay = await transaction.order.findUnique({
+          where: {
+            organizationId_checkoutIdempotencyKey: {
+              checkoutIdempotencyKey: prepared.idempotencyKey,
+              organizationId,
+            },
+          },
+          include: saleInclude,
+        });
+        if (lockedReplay) {
+          return saleReplay(lockedReplay, prepared.requestHash);
+        }
+
         const lineItems = prepared.items.map((item) => {
           const variant = variantById.get(item.variantId);
           const balance = balanceByVariant.get(item.variantId);
@@ -342,7 +357,7 @@ export class PosService {
               reservedAfter: item.balance.reservedQuantity,
               reservedBefore: item.balance.reservedQuantity,
               reservedDelta: 0,
-              type: InventoryMovementType.COMMIT,
+              type: InventoryMovementType.SALE,
             },
           });
         }

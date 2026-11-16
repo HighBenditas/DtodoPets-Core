@@ -1,5 +1,9 @@
 import { ConflictException } from '@nestjs/common';
-import { PaymentMethod, Prisma } from '../generated/prisma/client';
+import {
+  InventoryMovementType,
+  PaymentMethod,
+  Prisma,
+} from '../generated/prisma/client';
 import { PosService } from './pos.service';
 
 describe('PosService', () => {
@@ -120,11 +124,55 @@ describe('PosService', () => {
         data: expect.objectContaining({
           physicalAfter: 9,
           physicalDelta: -1,
+          reservedAfter: 0,
+          reservedBefore: 0,
+          reservedDelta: 0,
+          type: InventoryMovementType.SALE,
         }) as object,
       }),
     );
     expect(tx.payment.create).toHaveBeenCalled();
     expect(tx.domainEvent.create).toHaveBeenCalled();
+  });
+
+  it('sells only unreserved units and preserves reservations made by other orders', async () => {
+    const { service, tx } = setup();
+    tx.$queryRaw.mockResolvedValue([
+      {
+        id: 'balance-a',
+        physicalQuantity: 10,
+        reservedQuantity: 8,
+        variantId: '11111111-1111-4111-8111-111111111111',
+      },
+    ]);
+    const input = {
+      idempotencyKey: 'sale-with-reservations',
+      items: [
+        { quantity: 1, variantId: '11111111-1111-4111-8111-111111111111' },
+      ],
+      payments: [
+        { amount: 2000, method: PaymentMethod.CASH, provider: 'Caja' },
+      ],
+      warehouseId: '22222222-2222-4222-8222-222222222222',
+    };
+    await service.sell('org-a', 'user-a', input);
+    expect(tx.inventoryMovement.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        physicalAfter: 9,
+        reservedBefore: 8,
+        reservedAfter: 8,
+        reservedDelta: 0,
+        type: InventoryMovementType.SALE,
+      }) as object,
+    });
+    await expect(
+      service.sell('org-a', 'user-a', {
+        ...input,
+        items: [{ ...input.items[0], quantity: 3 }],
+        payments: [{ ...input.payments[0], amount: 6000 }],
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(tx.order.create).toHaveBeenCalledTimes(1);
   });
 
   it('rejects a replay key used with a different payload', async () => {

@@ -172,6 +172,7 @@ enum InventoryMovementType {
   RELEASE
   COMMIT
   RETURN
+  SALE
 }
 
 enum InventoryReservationStatus {
